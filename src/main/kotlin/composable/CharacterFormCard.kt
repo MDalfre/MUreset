@@ -1,4 +1,4 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,8 +29,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.model.AttributeType
-import org.example.model.WarpMap
+import io.github.mdalfre.model.AttributeType
+import io.github.mdalfre.model.WarpMap
 
 @Composable
 fun CharacterFormCard(

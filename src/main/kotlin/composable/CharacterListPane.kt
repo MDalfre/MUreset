@@ -1,4 +1,4 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Divider
-import org.example.model.CharacterConfig
+import io.github.mdalfre.model.CharacterConfig
 
 @Composable
 fun CharacterListPane(

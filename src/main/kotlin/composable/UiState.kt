@@ -1,9 +1,9 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
-import org.example.model.AttributeType
-import org.example.model.CharacterConfig
-import org.example.model.CharacterStats
-import org.example.model.LogEntry
+import io.github.mdalfre.model.AttributeType
+import io.github.mdalfre.model.CharacterConfig
+import io.github.mdalfre.model.CharacterStats
+import io.github.mdalfre.model.LogEntry
 
 data class SettingsState(
     val checkIntervalSeconds: String,

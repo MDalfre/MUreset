@@ -1,4 +1,4 @@
-package org.example.model
+package io.github.mdalfre.model
 
 data class CharacterConfig(
     val name: String,

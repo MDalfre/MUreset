@@ -1,4 +1,4 @@
-package org.example.model
+package io.github.mdalfre.model
 
 enum class AttributeType {
     STR,

@@ -1,6 +1,6 @@
-package org.example
+package io.github.mdalfre
 
-import org.example.composable.App
+import io.github.mdalfre.composable.App
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp

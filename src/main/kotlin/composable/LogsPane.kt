@@ -1,4 +1,4 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.model.LogType
+import io.github.mdalfre.model.LogType
 
 @Composable
 fun LogsPane(

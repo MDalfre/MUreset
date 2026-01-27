@@ -1,8 +1,8 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import org.example.model.AttributeType
+import io.github.mdalfre.model.AttributeType
 
 fun formatAttribute(attribute: AttributeType): String {
     return when (attribute) {

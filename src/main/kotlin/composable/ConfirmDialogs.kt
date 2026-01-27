@@ -1,9 +1,9 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import org.example.model.CharacterConfig
+import io.github.mdalfre.model.CharacterConfig
 
 @Composable
 fun ConfirmDialogs(

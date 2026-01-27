@@ -1,12 +1,12 @@
-package org.example.storage
+package io.github.mdalfre.storage
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import org.example.model.AttributeType
-import org.example.model.CharacterConfig
-import org.example.model.WarpMap
+import io.github.mdalfre.model.AttributeType
+import io.github.mdalfre.model.CharacterConfig
+import io.github.mdalfre.model.WarpMap
 
 object CharacterConfigStore {
     private val filePath: Path = Paths.get(

@@ -1,4 +1,4 @@
-package org.example.bot
+package io.github.mdalfre.bot
 
 import org.bytedeco.javacpp.Loader
 import org.bytedeco.opencv.global.opencv_core

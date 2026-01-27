@@ -1,18 +1,18 @@
-package org.example.bot
+package io.github.mdalfre.bot
 
-import org.example.bot.windows.WindowActions
-import org.example.bot.windows.WindowFinder
-import org.example.bot.windows.UserInputIdleMonitor
-import org.example.bot.windows.BotInputTracker
-import org.example.model.AttributeType
-import org.example.model.CharacterConfig
-import org.example.model.CharacterStats
-import org.example.model.LogEntry
-import org.example.model.LogType
-import org.example.bot.vision.PartyInteractor
-import org.example.bot.vision.HuntModeDetector
-import org.example.bot.vision.MapWarpInteractor
-import org.example.bot.windows.WindowInfo
+import io.github.mdalfre.bot.windows.WindowActions
+import io.github.mdalfre.bot.windows.WindowFinder
+import io.github.mdalfre.bot.windows.UserInputIdleMonitor
+import io.github.mdalfre.bot.windows.BotInputTracker
+import io.github.mdalfre.model.AttributeType
+import io.github.mdalfre.model.CharacterConfig
+import io.github.mdalfre.model.CharacterStats
+import io.github.mdalfre.model.LogEntry
+import io.github.mdalfre.model.LogType
+import io.github.mdalfre.bot.vision.PartyInteractor
+import io.github.mdalfre.bot.vision.HuntModeDetector
+import io.github.mdalfre.bot.vision.MapWarpInteractor
+import io.github.mdalfre.bot.windows.WindowInfo
 import java.awt.event.KeyEvent
 
 class BotController(

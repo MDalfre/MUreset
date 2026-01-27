@@ -1,4 +1,4 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

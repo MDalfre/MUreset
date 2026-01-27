@@ -6,8 +6,8 @@ plugins {
     id("org.jetbrains.compose") version "1.6.11"
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "io.github.mdalfre"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -36,7 +36,7 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "org.example.MainKt"
+        mainClass = "io.github.mdalfre.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Exe)
             packageName = "MUreset"

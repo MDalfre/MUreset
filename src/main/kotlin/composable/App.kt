@@ -1,4 +1,4 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -39,13 +39,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import org.example.bot.BotController
-import org.example.model.AttributeType
-import org.example.model.CharacterConfig
-import org.example.model.CharacterStats
-import org.example.model.LogEntry
-import org.example.model.WarpMap
-import org.example.storage.CharacterConfigStore
+import io.github.mdalfre.bot.BotController
+import io.github.mdalfre.model.AttributeType
+import io.github.mdalfre.model.CharacterConfig
+import io.github.mdalfre.model.CharacterStats
+import io.github.mdalfre.model.LogEntry
+import io.github.mdalfre.model.WarpMap
+import io.github.mdalfre.storage.CharacterConfigStore
 import java.awt.EventQueue
 
 @OptIn(ExperimentalMaterial3Api::class)

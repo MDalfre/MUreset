@@ -1,4 +1,4 @@
-package org.example.composable
+package io.github.mdalfre.composable
 
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults

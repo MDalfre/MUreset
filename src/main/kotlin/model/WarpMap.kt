@@ -1,4 +1,4 @@
-package org.example.model
+package io.github.mdalfre.model
 
 enum class WarpMap(val label: String, val templateResource: String) {
     ELBELAND_2("Elbeland 2", "/elbeland2_template.png"),

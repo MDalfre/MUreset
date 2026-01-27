@@ -1,4 +1,4 @@
-package org.example.bot.vision
+package io.github.mdalfre.bot.vision
 
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
@@ -7,9 +7,9 @@ import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.Mat
 import org.bytedeco.opencv.opencv_core.Point
 import org.bytedeco.opencv.opencv_core.Rect
-import org.example.bot.OpenCVBootstrap
-import org.example.bot.windows.WindowActions
-import org.example.bot.windows.WindowInfo
+import io.github.mdalfre.bot.OpenCVBootstrap
+import io.github.mdalfre.bot.windows.WindowActions
+import io.github.mdalfre.bot.windows.WindowInfo
 
 class PartyInteractor(
     private val windowActions: WindowActions = WindowActions()

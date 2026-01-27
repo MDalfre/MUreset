@@ -1,4 +1,4 @@
-package org.example.bot.windows
+package io.github.mdalfre.bot.windows
 
 object BotInputTracker {
     @Volatile

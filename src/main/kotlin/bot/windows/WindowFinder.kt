@@ -1,4 +1,4 @@
-package org.example.bot.windows
+package io.github.mdalfre.bot.windows
 
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
