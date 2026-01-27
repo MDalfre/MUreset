@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.mdalfre"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
