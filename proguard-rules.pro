@@ -1,0 +1,7 @@
+-dontwarn org.slf4j.**
+-dontwarn org.osgi.annotation.bundle.**
+-dontwarn org.bytedeco.**
+-dontwarn org.opencv.android.**
+-dontwarn android.**
+-dontwarn kotlinx.serialization.**
+-dontwarn kotlinx.datetime.serializers.**
