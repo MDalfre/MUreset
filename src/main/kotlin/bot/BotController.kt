@@ -143,7 +143,7 @@ class BotController(
                 val (name, stats) = parseStats(window.title) ?: continue
                 onStats(name, stats)
                 onLog(infoLog("${character.name} Level: ${stats.level} Master Level: ${stats.masterLevel} Resets: ${stats.resets}"))
-                if (stats.level != RESET_LEVEL) {
+                if (stats.level == RESET_LEVEL) {
                     if (resetThisCycle.add(character.name)) {
                         performResetRoutine(window, character, stats, onLog)
                         val soloOk = runSoloLeveling(window, character, onLog, onStats)
