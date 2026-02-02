@@ -1,7 +1,6 @@
 package io.github.mdalfre.bot.vision
 
 import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
 import org.bytedeco.opencv.global.opencv_core
 import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.Mat
@@ -14,9 +13,9 @@ import io.github.mdalfre.bot.windows.WindowInfo
 class PartyInteractor(
     private val windowActions: WindowActions = WindowActions()
 ) {
-    private val okTemplate: Mat? = loadOkTemplate()
+    private val okTemplate: Mat? = VisionUtils.loadTemplate("/ok_dialog_template.png")
 
-    fun clickOtherPartyMember(window: WindowInfo): Boolean {
+    fun rejoinParty(window: WindowInfo): Boolean {
         OpenCVBootstrap.init()
         windowActions.focus(window)
         Thread.sleep(300)
@@ -84,7 +83,7 @@ class PartyInteractor(
             (height * OK_REGION_H).toInt()
         )
         val template = okTemplate ?: return null
-        val bgr = toBgrMat(image)
+        val bgr = VisionUtils.toBgrMat(image)
         val roi = Mat(bgr, region)
         val resultCols = roi.cols() - template.cols() + 1
         val resultRows = roi.rows() - template.rows() + 1
@@ -106,25 +105,6 @@ class PartyInteractor(
         return clickX to clickY
     }
 
-
-    private fun toBgrMat(image: BufferedImage): Mat {
-        val converted = BufferedImage(image.width, image.height, BufferedImage.TYPE_3BYTE_BGR)
-        val graphics = converted.createGraphics()
-        graphics.drawImage(image, 0, 0, null)
-        graphics.dispose()
-        val data = (converted.raster.dataBuffer as java.awt.image.DataBufferByte).data
-        val mat = Mat(image.height, image.width, opencv_core.CV_8UC3)
-        val pointer = mat.data()
-        pointer.put(data, 0, data.size)
-        return mat
-    }
-
-
-    private fun loadOkTemplate(): Mat? {
-        val stream = javaClass.getResourceAsStream("/ok_dialog_template.png") ?: return null
-        val image = ImageIO.read(stream) ?: return null
-        return toBgrMat(image)
-    }
 
     private companion object {
         private const val PARTY_X_START = 0.74

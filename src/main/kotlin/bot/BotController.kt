@@ -9,6 +9,7 @@ import io.github.mdalfre.model.CharacterConfig
 import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.LogType
+import io.github.mdalfre.bot.vision.CurrentMapDetector
 import io.github.mdalfre.bot.vision.PartyInteractor
 import io.github.mdalfre.bot.vision.HuntModeDetector
 import io.github.mdalfre.bot.vision.MapWarpInteractor
@@ -25,6 +26,7 @@ class BotController(
     private val partyInteractor = PartyInteractor(windowActions)
     private val huntModeDetector = HuntModeDetector(windowActions)
     private val mapWarpInteractor = MapWarpInteractor(windowActions)
+    private val currentMapDetector = CurrentMapDetector(windowActions)
 
     fun start(
         characters: List<CharacterConfig>,
@@ -150,8 +152,8 @@ class BotController(
                         if (!soloOk) {
                             return false
                         }
-                        partyInteractor.clickOtherPartyMember(window)
-                        Thread.sleep(500)
+                        Thread.sleep(2000)
+                        rejoinPartyWithRetry(window, character, onLog)
                         val huntOk = huntModeDetector.waitForHuntMode(window, huntWaitTimeoutMs, onLog = onLog)
                         if (!huntOk) {
                             onLog(attentionLog("Hunt mode not detected for ${character.name}."))
@@ -234,9 +236,54 @@ class BotController(
             onLog(attentionLog("Warp to Elbeland 3 failed for ${character.name}."))
             return true
         }
-        windowActions.sendKey(KeyEvent.VK_HOME)
-        Thread.sleep(300)
+        ensureHuntModeActive(window, character, onLog)
         return waitForSoloLevel(window, character, targetLevel, onLog, onStats)
+    }
+
+    private fun ensureHuntModeActive(
+        window: WindowInfo,
+        character: CharacterConfig,
+        onLog: (LogEntry) -> Unit
+    ) {
+        repeat(HUNT_TOGGLE_MAX_ATTEMPTS) { attempt ->
+            if (!running) {
+                return
+            }
+            if (huntModeDetector.isHuntActive(window)) {
+                return
+            }
+            windowActions.sendKey(KeyEvent.VK_HOME)
+            Thread.sleep(HUNT_TOGGLE_DELAY_MS)
+            if (huntModeDetector.isHuntActive(window)) {
+                return
+            }
+            if (attempt == HUNT_TOGGLE_MAX_ATTEMPTS - 1) {
+                onLog(attentionLog("Hunt mode not active for ${character.name} after ${HUNT_TOGGLE_MAX_ATTEMPTS} attempts."))
+            }
+        }
+    }
+
+    private fun rejoinPartyWithRetry(
+        window: WindowInfo,
+        character: CharacterConfig,
+        onLog: (LogEntry) -> Unit
+    ) {
+        var stillElbeland = true
+        repeat(REJOIN_MAX_ATTEMPTS) { _ ->
+            if (!running) {
+                return
+            }
+            partyInteractor.rejoinParty(window)
+            Thread.sleep(REJOIN_CHECK_DELAY_MS)
+            stillElbeland = currentMapDetector.isElbeland(window)
+            if (!stillElbeland) {
+                onLog(importantLog("${character.name} left Elbeland after rejoin."))
+                return
+            }
+        }
+        if (stillElbeland) {
+            onLog(attentionLog("${character.name} still in Elbeland after $REJOIN_MAX_ATTEMPTS attempts."))
+        }
     }
 
     private fun waitForSoloLevel(
@@ -308,6 +355,10 @@ class BotController(
         private const val COMMAND_DELAY_MS = 500L
         private const val BOT_INPUT_IGNORE_MS = 2_500L
         private const val SOLO_LEVEL_POLL_MS = 3_000L
+        private const val REJOIN_MAX_ATTEMPTS = 3
+        private const val REJOIN_CHECK_DELAY_MS = 2_000L
+        private const val HUNT_TOGGLE_MAX_ATTEMPTS = 3
+        private const val HUNT_TOGGLE_DELAY_MS = 800L
         private val TITLE_REGEX = Regex(
             """Name:\s*\[(.+?)]\s*Level:\s*\[(\d+)]\s*Master Level:\s*\[(\d+)]\s*Resets:\s*\[(\d+)]"""
         )

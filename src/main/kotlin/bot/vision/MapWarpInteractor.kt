@@ -2,11 +2,7 @@ package io.github.mdalfre.bot.vision
 
 import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
-import org.bytedeco.opencv.global.opencv_core
-import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.Mat
-import org.bytedeco.opencv.opencv_core.Point
 import org.bytedeco.opencv.opencv_core.Rect
 import io.github.mdalfre.bot.OpenCVBootstrap
 import io.github.mdalfre.bot.windows.WindowActions
@@ -18,8 +14,8 @@ import io.github.mdalfre.model.WarpMap
 class MapWarpInteractor(
     private val windowActions: WindowActions = WindowActions()
 ) {
-    private val elbeland3Template: Mat? = loadTemplate("/elbeland3_template.png")
-    private val elbeland2Template: Mat? = loadTemplate("/elbeland2_template.png")
+    private val elbeland3Template: Mat? = VisionUtils.loadTemplate("/elbeland3_template.png")
+    private val elbeland2Template: Mat? = VisionUtils.loadTemplate("/elbeland2_template.png")
 
     fun warpToMap(window: WindowInfo, map: WarpMap, onLog: (LogEntry) -> Unit = {}): Boolean {
         val template = getTemplate(map)
@@ -58,8 +54,8 @@ class MapWarpInteractor(
         map: WarpMap,
         template: Mat
     ): Pair<Int, Int>? {
-        val bgr = toBgrMat(image)
-        val roiRect = cropRegionRect(bgr)
+        val bgr = VisionUtils.toBgrMat(image)
+        val roiRect = VisionUtils.cropRegionRect(bgr, REGION_X, REGION_Y, REGION_W, REGION_H)
         val baseMatch = findTemplateClickInRegion(
             bgr = bgr,
             regionRect = roiRect,
@@ -118,7 +114,7 @@ class MapWarpInteractor(
         threshold: Double
     ): Pair<Int, Int>? {
         val roi = Mat(bgr, regionRect)
-        val match = matchLocationMultiScale(roi, template) ?: return null
+        val match = VisionUtils.matchLocationMultiScale(roi, template, TEMPLATE_SCALES) ?: return null
         if (match.score < threshold) {
             return null
         }
@@ -129,69 +125,6 @@ class MapWarpInteractor(
         return clickX to clickY
     }
 
-
-    private fun cropRegionRect(image: Mat): Rect {
-        val width = image.cols()
-        val height = image.rows()
-        val x = (width * REGION_X).toInt()
-        val y = (height * REGION_Y).toInt()
-        val w = (width * REGION_W).toInt()
-        val h = (height * REGION_H).toInt()
-        val safeX = x.coerceIn(0, width - 1)
-        val safeY = y.coerceIn(0, height - 1)
-        val safeW = w.coerceIn(1, width - safeX)
-        val safeH = h.coerceIn(1, height - safeY)
-        return Rect(safeX, safeY, safeW, safeH)
-    }
-
-    private fun matchLocationMultiScale(region: Mat, template: Mat): TemplateMatch? {
-        var bestMatch: TemplateMatch? = null
-        for (scale in TEMPLATE_SCALES) {
-            val scaled = Mat()
-            val newWidth = (template.cols() * scale).toInt()
-            val newHeight = (template.rows() * scale).toInt()
-            if (newWidth < 6 || newHeight < 6) {
-                continue
-            }
-            opencv_imgproc.resize(template, scaled, org.bytedeco.opencv.opencv_core.Size(newWidth, newHeight))
-            val resultCols = region.cols() - scaled.cols() + 1
-            val resultRows = region.rows() - scaled.rows() + 1
-            if (resultCols <= 0 || resultRows <= 0) {
-                continue
-            }
-            val result = Mat(resultRows, resultCols, opencv_core.CV_32FC1)
-            opencv_imgproc.matchTemplate(region, scaled, result, opencv_imgproc.TM_CCOEFF_NORMED)
-            val minVal = DoubleArray(1)
-            val maxVal = DoubleArray(1)
-            val minLoc = Point()
-            val maxLoc = Point()
-            opencv_core.minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, Mat())
-            val candidate = TemplateMatch(maxLoc, scale, maxVal[0])
-            if (bestMatch == null || candidate.score > bestMatch.score) {
-                bestMatch = candidate
-            }
-        }
-        return bestMatch
-    }
-
-    private fun loadTemplate(resource: String): Mat? {
-        val stream = javaClass.getResourceAsStream(resource) ?: return null
-        val image = ImageIO.read(stream) ?: return null
-        return toBgrMat(image)
-    }
-
-
-    private fun toBgrMat(image: BufferedImage): Mat {
-        val converted = BufferedImage(image.width, image.height, BufferedImage.TYPE_3BYTE_BGR)
-        val graphics = converted.createGraphics()
-        graphics.drawImage(image, 0, 0, null)
-        graphics.dispose()
-        val data = (converted.raster.dataBuffer as java.awt.image.DataBufferByte).data
-        val mat = Mat(image.height, image.width, opencv_core.CV_8UC3)
-        val pointer = mat.data()
-        pointer.put(data, 0, data.size)
-        return mat
-    }
 
     private fun getTemplate(map: WarpMap): Mat? {
         return when (map) {
@@ -215,9 +148,4 @@ class MapWarpInteractor(
         private val TEMPLATE_SCALES = doubleArrayOf(0.9, 0.95, 1.0, 1.05, 1.1)
     }
 
-    private data class TemplateMatch(
-        val point: Point,
-        val scale: Double,
-        val score: Double
-    )
 }

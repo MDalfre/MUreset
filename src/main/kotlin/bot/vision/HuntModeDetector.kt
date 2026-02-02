@@ -1,14 +1,8 @@
 package io.github.mdalfre.bot.vision
 
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
 import kotlin.math.max
-import kotlin.math.min
-import org.bytedeco.opencv.global.opencv_core
 import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.Mat
-import org.bytedeco.opencv.opencv_core.Point
-import org.bytedeco.opencv.opencv_core.Rect
 import org.bytedeco.opencv.opencv_core.Size
 import io.github.mdalfre.bot.OpenCVBootstrap
 import io.github.mdalfre.bot.windows.WindowActions
@@ -19,8 +13,8 @@ import io.github.mdalfre.model.LogType
 class HuntModeDetector(
     private val windowActions: WindowActions = WindowActions()
 ) {
-    private val playTemplateColor: Mat? = loadTemplate("/play_button_template.png")
-    private val pauseTemplateColor: Mat? = loadTemplate("/pause_button_template.png")
+    private val playTemplateColor: Mat? = VisionUtils.loadTemplate("/play_button_template.png")
+    private val pauseTemplateColor: Mat? = VisionUtils.loadTemplate("/pause_button_template.png")
     private val playTemplateEdges: Mat? = playTemplateColor?.let { toEdges(it) }
     private val pauseTemplateEdges: Mat? = pauseTemplateColor?.let { toEdges(it) }
 
@@ -47,8 +41,8 @@ class HuntModeDetector(
         }
         OpenCVBootstrap.init()
         val screenshot = windowActions.captureClientArea(window)
-        val bgr = toBgrMat(screenshot)
-        val roiRect = cropRegionRect(bgr)
+        val bgr = VisionUtils.toBgrMat(screenshot)
+        val roiRect = VisionUtils.cropRegionRect(bgr, REGION_X, REGION_Y, REGION_W, REGION_H)
         val roi = Mat(bgr, roiRect)
         val (pauseScoreColor, _) = matchScoreMultiScale(roi, pauseTemplateColor)
         val (playScoreColor, _) = matchScoreMultiScale(roi, playTemplateColor)
@@ -79,34 +73,8 @@ class HuntModeDetector(
         return decision
     }
 
-    private fun cropRegionRect(image: Mat): Rect {
-        val width = image.cols()
-        val height = image.rows()
-        val x = (width * REGION_X).toInt()
-        val y = (height * REGION_Y).toInt()
-        val w = (width * REGION_W).toInt()
-        val h = (height * REGION_H).toInt()
-        val safeX = max(0, min(x, width - 1))
-        val safeY = max(0, min(y, height - 1))
-        val safeW = max(1, min(w, width - safeX))
-        val safeH = max(1, min(h, height - safeY))
-        return Rect(safeX, safeY, safeW, safeH)
-    }
-
     private fun matchScore(region: Mat, template: Mat): Double {
-        val resultCols = region.cols() - template.cols() + 1
-        val resultRows = region.rows() - template.rows() + 1
-        if (resultCols <= 0 || resultRows <= 0) {
-            return -1.0
-        }
-        val result = Mat(resultRows, resultCols, opencv_core.CV_32FC1)
-        opencv_imgproc.matchTemplate(region, template, result, opencv_imgproc.TM_CCOEFF_NORMED)
-        val minVal = DoubleArray(1)
-        val maxVal = DoubleArray(1)
-        val minLoc = Point()
-        val maxLoc = Point()
-        opencv_core.minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, Mat())
-        return maxVal[0]
+        return VisionUtils.matchTemplateScore(region, template)
     }
 
     private fun matchScoreMultiScale(region: Mat, template: Mat): Pair<Double, Double> {
@@ -135,24 +103,6 @@ class HuntModeDetector(
         val edges = Mat()
         opencv_imgproc.Canny(gray, edges, 50.0, 150.0)
         return edges
-    }
-
-    private fun loadTemplate(resource: String): Mat? {
-        val stream = javaClass.getResourceAsStream(resource) ?: return null
-        val image = ImageIO.read(stream) ?: return null
-        return toBgrMat(image)
-    }
-
-    private fun toBgrMat(image: BufferedImage): Mat {
-        val converted = BufferedImage(image.width, image.height, BufferedImage.TYPE_3BYTE_BGR)
-        val graphics = converted.createGraphics()
-        graphics.drawImage(image, 0, 0, null)
-        graphics.dispose()
-        val data = (converted.raster.dataBuffer as java.awt.image.DataBufferByte).data
-        val mat = Mat(image.height, image.width, opencv_core.CV_8UC3)
-        val pointer = mat.data()
-        pointer.put(data, 0, data.size)
-        return mat
     }
 
     private companion object {
