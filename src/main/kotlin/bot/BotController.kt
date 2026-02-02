@@ -13,6 +13,8 @@ import io.github.mdalfre.bot.vision.CurrentMapDetector
 import io.github.mdalfre.bot.vision.PartyInteractor
 import io.github.mdalfre.bot.vision.HuntModeDetector
 import io.github.mdalfre.bot.vision.MapWarpInteractor
+import io.github.mdalfre.bot.vision.QuestDialogCloser
+import io.github.mdalfre.bot.windows.DebugHotkeyMonitor
 import io.github.mdalfre.bot.windows.WindowInfo
 import java.awt.event.KeyEvent
 
@@ -27,6 +29,10 @@ class BotController(
     private val huntModeDetector = HuntModeDetector(windowActions)
     private val mapWarpInteractor = MapWarpInteractor(windowActions)
     private val currentMapDetector = CurrentMapDetector(windowActions)
+    private val questDialogCloser = QuestDialogCloser(windowActions)
+    private val debugHotkeyMonitor = DebugHotkeyMonitor()
+    @Volatile
+    private var debugCursorRunning = false
 
     fun start(
         characters: List<CharacterConfig>,
@@ -147,6 +153,7 @@ class BotController(
                 onLog(infoLog("${character.name} Level: ${stats.level} Master Level: ${stats.masterLevel} Resets: ${stats.resets}"))
                 if (stats.level == RESET_LEVEL) {
                     if (resetThisCycle.add(character.name)) {
+                        questDialogCloser.closeIfPresent(window, onLog)
                         performResetRoutine(window, character, stats, onLog)
                         val soloOk = runSoloLeveling(window, character, onLog, onStats)
                         if (!soloOk) {
@@ -173,6 +180,46 @@ class BotController(
             return true
         } finally {
             onActive(null)
+        }
+    }
+
+    fun logFocusedCursor(onLog: (LogEntry) -> Unit) {
+        val window = windowFinder.getForegroundWindowInfo()
+        if (window == null) {
+            onLog(attentionLog("Debug: no foreground window detected."))
+            return
+        }
+        val prefix = window.title.take(10)
+        onLog(infoLog("Debug: focused window title prefix: \"$prefix\""))
+        startFocusedCursorLogging(onLog)
+    }
+
+    fun stopFocusedCursorLogging(onLog: (LogEntry) -> Unit) {
+        if (!debugCursorRunning) {
+            return
+        }
+        debugCursorRunning = false
+        onLog(infoLog("Debug: stopped cursor logging."))
+    }
+
+    private fun startFocusedCursorLogging(onLog: (LogEntry) -> Unit) {
+        if (debugCursorRunning) {
+            return
+        }
+        debugCursorRunning = true
+        Thread {
+            while (debugCursorRunning) {
+                val window = windowFinder.getForegroundWindowInfo()
+                if (window == null) {
+                    onLog(attentionLog("Debug: no foreground window detected."))
+                } else {
+                    debugHotkeyMonitor.logCursor(window, onLog)
+                }
+                Thread.sleep(DEBUG_CURSOR_POLL_MS)
+            }
+        }.apply {
+            isDaemon = true
+            start()
         }
     }
 
@@ -359,6 +406,7 @@ class BotController(
         private const val REJOIN_CHECK_DELAY_MS = 2_000L
         private const val HUNT_TOGGLE_MAX_ATTEMPTS = 3
         private const val HUNT_TOGGLE_DELAY_MS = 800L
+        private const val DEBUG_CURSOR_POLL_MS = 5_000L
         private val TITLE_REGEX = Regex(
             """Name:\s*\[(.+?)]\s*Level:\s*\[(\d+)]\s*Master Level:\s*\[(\d+)]\s*Resets:\s*\[(\d+)]"""
         )

@@ -45,6 +45,9 @@ import io.github.mdalfre.model.CharacterConfig
 import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.WarpMap
+import io.github.mdalfre.bot.BotDebugConfig
+import io.github.mdalfre.storage.BotSettings
+import io.github.mdalfre.storage.BotSettingsStore
 import io.github.mdalfre.storage.CharacterConfigStore
 import java.awt.EventQueue
 
@@ -134,8 +137,9 @@ fun App() {
                 var pendingDelete by remember { mutableStateOf<CharacterConfig?>(null) }
                 var pendingClear by remember { mutableStateOf(false) }
                 var errorMessage by remember { mutableStateOf<String?>(null) }
-                var checkIntervalSeconds by remember { mutableStateOf("60") }
-                var teleportWaitSeconds by remember { mutableStateOf("30") }
+                val savedSettings = remember { BotSettingsStore.load() }
+                var checkIntervalSeconds by remember { mutableStateOf(savedSettings.checkIntervalSeconds.toString()) }
+                var teleportWaitSeconds by remember { mutableStateOf(savedSettings.teleportWaitSeconds.toString()) }
                 var showForm by remember { mutableStateOf(false) }
 
                 fun resetForm(clearError: Boolean = true) {
@@ -198,6 +202,20 @@ fun App() {
                 val mapsFocus = remember { FocusRequester() }
                 val addFocus = remember { FocusRequester() }
 
+                fun pushLog(entry: LogEntry) {
+                    EventQueue.invokeLater {
+                        logs.add(
+                            LogEntry(
+                                message = "${timestampPrefix()} ${entry.message}",
+                                type = entry.type
+                            )
+                        )
+                        if (logs.size > 200) {
+                            logs.removeRange(0, logs.size - 200)
+                        }
+                    }
+                }
+
                 Column(
                     modifier = Modifier.width(1100.dp),
                     verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
@@ -214,19 +232,7 @@ fun App() {
                                 isRunning = true
                                 botController.start(
                                     characters = characters.filter { it.active },
-                                    onLog = { entry ->
-                                        EventQueue.invokeLater {
-                                            logs.add(
-                                                LogEntry(
-                                                    message = "${timestampPrefix()} ${entry.message}",
-                                                    type = entry.type
-                                                )
-                                            )
-                                            if (logs.size > 200) {
-                                                logs.removeRange(0, logs.size - 200)
-                                            }
-                                        }
-                                    },
+                                    onLog = { entry -> pushLog(entry) },
                                     onStats = { characterName, stats ->
                                         EventQueue.invokeLater { statsByName[characterName] = stats }
                                     },
@@ -256,10 +262,37 @@ fun App() {
                             showForm = showForm,
                             isRunning = isRunning
                         ),
-                        onCheckIntervalChange = { value -> checkIntervalSeconds = digitsOnly(value) },
-                        onTeleportWaitChange = { value -> teleportWaitSeconds = digitsOnly(value) },
+                        onCheckIntervalChange = { value ->
+                            checkIntervalSeconds = digitsOnly(value)
+                            val check = checkIntervalSeconds.toIntOrNull() ?: 60
+                            val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
+                            BotSettingsStore.save(BotSettings(check, teleport))
+                        },
+                        onTeleportWaitChange = { value ->
+                            teleportWaitSeconds = digitsOnly(value)
+                            val check = checkIntervalSeconds.toIntOrNull() ?: 60
+                            val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
+                            BotSettingsStore.save(BotSettings(check, teleport))
+                        },
                         onToggleForm = { showForm = !showForm }
                     )
+                    if (BotDebugConfig.ENABLED) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                        ) {
+                            StyledButton(
+                                text = "Log cursor (focused window)",
+                                onClick = { botController.logFocusedCursor { entry -> pushLog(entry) } },
+                                enabled = true
+                            )
+                            StyledButton(
+                                text = "Stop logging",
+                                onClick = { botController.stopFocusedCursorLogging { entry -> pushLog(entry) } },
+                                enabled = true
+                            )
+                        }
+                    }
 
                     if (showForm) {
                         CharacterFormCard(

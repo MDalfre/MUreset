@@ -25,4 +25,18 @@ class WindowFinder {
         User32.INSTANCE.GetWindowText(handle, buffer, buffer.size)
         return String(buffer).trimEnd('\u0000')
     }
+
+    fun getWindowInfo(handle: WinDef.HWND): WindowInfo? {
+        val rect = WinDef.RECT()
+        if (!User32.INSTANCE.GetWindowRect(handle, rect)) {
+            return null
+        }
+        val title = getWindowTitle(handle)
+        return WindowInfo(handle, title, rect)
+    }
+
+    fun getForegroundWindowInfo(): WindowInfo? {
+        val handle = User32.INSTANCE.GetForegroundWindow() ?: return null
+        return getWindowInfo(handle)
+    }
 }
