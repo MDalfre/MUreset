@@ -51,19 +51,7 @@ object VisionUtils {
     }
 
     fun matchTemplateScore(region: Mat, template: Mat): Double {
-        val resultCols = region.cols() - template.cols() + 1
-        val resultRows = region.rows() - template.rows() + 1
-        if (resultCols <= 0 || resultRows <= 0) {
-            return -1.0
-        }
-        val result = Mat(resultRows, resultCols, opencv_core.CV_32FC1)
-        opencv_imgproc.matchTemplate(region, template, result, opencv_imgproc.TM_CCOEFF_NORMED)
-        val minVal = DoubleArray(1)
-        val maxVal = DoubleArray(1)
-        val minLoc = Point()
-        val maxLoc = Point()
-        opencv_core.minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, Mat())
-        return maxVal[0]
+        return matchTemplate(region, template)?.score ?: -1.0
     }
 
     fun matchLocationMultiScale(region: Mat, template: Mat, scales: DoubleArray): TemplateMatch? {
@@ -76,28 +64,28 @@ object VisionUtils {
                 continue
             }
             opencv_imgproc.resize(template, scaled, Size(newWidth, newHeight))
-            val score = matchTemplateScore(region, scaled)
-            if (score < 0) {
-                continue
-            }
-            val resultCols = region.cols() - scaled.cols() + 1
-            val resultRows = region.rows() - scaled.rows() + 1
-            if (resultCols <= 0 || resultRows <= 0) {
-                continue
-            }
-            val result = Mat(resultRows, resultCols, opencv_core.CV_32FC1)
-            opencv_imgproc.matchTemplate(region, scaled, result, opencv_imgproc.TM_CCOEFF_NORMED)
-            val minVal = DoubleArray(1)
-            val maxVal = DoubleArray(1)
-            val minLoc = Point()
-            val maxLoc = Point()
-            opencv_core.minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, Mat())
-            val candidate = TemplateMatch(maxLoc, scale, maxVal[0])
+            val candidate = matchTemplate(region, scaled)?.copy(scale = scale) ?: continue
             if (bestMatch == null || candidate.score > bestMatch.score) {
                 bestMatch = candidate
             }
         }
         return bestMatch
+    }
+
+    private fun matchTemplate(region: Mat, template: Mat): TemplateMatch? {
+        val resultCols = region.cols() - template.cols() + 1
+        val resultRows = region.rows() - template.rows() + 1
+        if (resultCols <= 0 || resultRows <= 0) {
+            return null
+        }
+        val result = Mat(resultRows, resultCols, opencv_core.CV_32FC1)
+        opencv_imgproc.matchTemplate(region, template, result, opencv_imgproc.TM_CCOEFF_NORMED)
+        val minVal = DoubleArray(1)
+        val maxVal = DoubleArray(1)
+        val minLoc = Point()
+        val maxLoc = Point()
+        opencv_core.minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, Mat())
+        return TemplateMatch(maxLoc, 1.0, maxVal[0])
     }
 
     data class TemplateMatch(

@@ -9,6 +9,7 @@ import io.github.mdalfre.model.CharacterConfig
 import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.LogType
+import io.github.mdalfre.bot.BotRuntimeState
 import io.github.mdalfre.bot.vision.CurrentMapDetector
 import io.github.mdalfre.bot.vision.PartyInteractor
 import io.github.mdalfre.bot.vision.HuntModeDetector
@@ -76,8 +77,8 @@ class BotController(
         teleportWaitSeconds: Int
     ) {
         var cycle = 0
-        val intervalSeconds = if (checkIntervalSeconds > 0) checkIntervalSeconds else 60
-        val huntWaitTimeoutMs = (if (teleportWaitSeconds > 0) teleportWaitSeconds else 30) * 1000L
+        val intervalSeconds = normalizeSeconds(checkIntervalSeconds, DEFAULT_CHECK_INTERVAL_SECONDS)
+        val huntWaitTimeoutMs = normalizeSeconds(teleportWaitSeconds, DEFAULT_TELEPORT_WAIT_SECONDS) * 1000L
         while (running) {
             if (!waitForUserIdle(onLog)) {
                 return
@@ -137,50 +138,106 @@ class BotController(
         onActive(character.name)
         try {
             val windows = windowFinder.findWindowsByPrefix(windowPrefix(character.name))
-            if (windows.isEmpty()) {
-                onLog(attentionLog("No window found for ${character.name}"))
-                onStatus(character.name, false)
-            } else {
-                onStatus(character.name, true)
-            }
+            updateWindowStatus(character, windows.isNotEmpty(), onLog, onStatus)
             for (window in windows) {
                 if (!running) {
                     return false
                 }
-                onLog(infoLog("Selecting: ${character.name}"))
-                val (name, stats) = parseStats(window.title) ?: continue
-                onStats(name, stats)
-                onLog(infoLog("${character.name} Level: ${stats.level} Master Level: ${stats.masterLevel} Resets: ${stats.resets}"))
-                if (stats.level == RESET_LEVEL) {
-                    if (resetThisCycle.add(character.name)) {
-                        questDialogCloser.closeIfPresent(window, onLog)
-                        performResetRoutine(window, character, stats, onLog)
-                        val soloOk = runSoloLeveling(window, character, onLog, onStats)
-                        if (!soloOk) {
-                            return false
-                        }
-                        Thread.sleep(2000)
-                        rejoinPartyWithRetry(window, character, onLog)
-                        val huntOk = huntModeDetector.waitForHuntMode(window, huntWaitTimeoutMs, onLog = onLog)
-                        if (!huntOk) {
-                            onLog(attentionLog("Hunt mode not detected for ${character.name}."))
-                        } else {
-                            onLog(importantLog("${character.name} returned to hunt mode."))
-                            onLog(importantLog("${character.name} reset complete -> Resets: ${stats.resets + 1}"))
-                        }
-                        continue
-                    } else {
-                        onLog(infoLog("Reset already executed this cycle for ${character.name}"))
-                    }
-                } else {
-                    onLog(infoLog("${character.name} waiting for level ${RESET_LEVEL}..."))
+                val shouldContinue = handleWindow(
+                    window = window,
+                    character = character,
+                    resetThisCycle = resetThisCycle,
+                    huntWaitTimeoutMs = huntWaitTimeoutMs,
+                    onLog = onLog,
+                    onStats = onStats
+                )
+                if (!shouldContinue) {
+                    return false
                 }
-                windowActions.focus(window)
             }
             return true
         } finally {
             onActive(null)
         }
+    }
+
+    private fun handleWindow(
+        window: WindowInfo,
+        character: CharacterConfig,
+        resetThisCycle: MutableSet<String>,
+        huntWaitTimeoutMs: Long,
+        onLog: (LogEntry) -> Unit,
+        onStats: (String, CharacterStats) -> Unit
+    ): Boolean {
+        onLog(infoLog("Selecting: ${character.name}"))
+        val parsed = parseStats(window.title) ?: return true
+        val (name, stats) = parsed
+        onStats(name, stats)
+        logStats(character, stats, onLog)
+        if (stats.level != RESET_LEVEL) {
+            onLog(infoLog("${character.name} waiting for level ${RESET_LEVEL}..."))
+            focusAndCapture(character, window)
+            return true
+        }
+        if (!resetThisCycle.add(character.name)) {
+            onLog(infoLog("Reset already executed this cycle for ${character.name}"))
+            focusAndCapture(character, window)
+            return true
+        }
+        return handleResetFlow(window, character, stats, huntWaitTimeoutMs, onLog, onStats)
+    }
+
+    private fun handleResetFlow(
+        window: WindowInfo,
+        character: CharacterConfig,
+        stats: CharacterStats,
+        huntWaitTimeoutMs: Long,
+        onLog: (LogEntry) -> Unit,
+        onStats: (String, CharacterStats) -> Unit
+    ): Boolean {
+        questDialogCloser.closeIfPresent(window, onLog)
+        performResetRoutine(window, character, stats, onLog)
+        if (!runSoloLeveling(window, character, onLog, onStats)) {
+            return false
+        }
+        Thread.sleep(REJOIN_AFTER_SOLO_DELAY_MS)
+        rejoinPartyWithRetry(window, character, onLog)
+        logHuntReturn(window, character, stats, huntWaitTimeoutMs, onLog)
+        captureScreenshot(character, window)
+        return true
+    }
+
+    private fun logHuntReturn(
+        window: WindowInfo,
+        character: CharacterConfig,
+        stats: CharacterStats,
+        huntWaitTimeoutMs: Long,
+        onLog: (LogEntry) -> Unit
+    ) {
+        val huntOk = huntModeDetector.waitForHuntMode(window, huntWaitTimeoutMs, onLog = onLog)
+        if (!huntOk) {
+            onLog(attentionLog("Hunt mode not detected for ${character.name}."))
+            return
+        }
+        onLog(importantLog("${character.name} returned to hunt mode."))
+        onLog(importantLog("${character.name} reset complete -> Resets: ${stats.resets + 1}"))
+    }
+
+    private fun logStats(character: CharacterConfig, stats: CharacterStats, onLog: (LogEntry) -> Unit) {
+        onLog(infoLog("${character.name} Level: ${stats.level} Master Level: ${stats.masterLevel} Resets: ${stats.resets}"))
+    }
+
+    private fun focusAndCapture(character: CharacterConfig, window: WindowInfo) {
+        windowActions.focus(window)
+        captureScreenshot(character, window)
+    }
+
+    private fun captureScreenshot(character: CharacterConfig, window: WindowInfo) {
+        if (!character.active) {
+            return
+        }
+        val image = windowActions.captureClientArea(window)
+        BotRuntimeState.setScreenshot(character.name, image)
     }
 
     fun logFocusedCursor(onLog: (LogEntry) -> Unit) {
@@ -283,9 +340,8 @@ class BotController(
             return true
         }
         onLog(infoLog("Starting solo leveling for ${character.name} (target level $targetLevel)."))
-        val warpOk = mapWarpInteractor.warpToMap(window, character.warpMap, onLog)
-        if (!warpOk) {
-            onLog(attentionLog("Warp to Elbeland 3 failed for ${character.name}."))
+        if (!mapWarpInteractor.warpToMap(window, character.warpMap, onLog)) {
+            onLog(attentionLog("Warp to ${character.warpMap.label} failed for ${character.name}."))
             return true
         }
         ensureHuntModeActive(window, character, onLog)
@@ -321,7 +377,7 @@ class BotController(
         onLog: (LogEntry) -> Unit
     ) {
         var stillElbeland = true
-        repeat(REJOIN_MAX_ATTEMPTS) { _ ->
+        repeat(REJOIN_MAX_ATTEMPTS) {
             if (!running) {
                 return
             }
@@ -385,10 +441,7 @@ class BotController(
     private fun waitForUserIdle(onLog: (LogEntry) -> Unit): Boolean {
         var notified = false
         while (running) {
-            if (idleMonitor.idleMillis() >= USER_IDLE_MS) {
-                return true
-            }
-            if (BotInputTracker.isRecent(BOT_INPUT_IGNORE_MS)) {
+            if (idleMonitor.idleMillis() >= USER_IDLE_MS || BotInputTracker.isRecent(BOT_INPUT_IGNORE_MS)) {
                 return true
             }
             if (!notified) {
@@ -400,8 +453,26 @@ class BotController(
         return false
     }
 
+    private fun updateWindowStatus(
+        character: CharacterConfig,
+        hasWindows: Boolean,
+        onLog: (LogEntry) -> Unit,
+        onStatus: (String, Boolean) -> Unit
+    ) {
+        onStatus(character.name, hasWindows)
+        if (!hasWindows) {
+            onLog(attentionLog("No window found for ${character.name}"))
+        }
+    }
+
+    private fun normalizeSeconds(value: Int, defaultValue: Int): Int {
+        return if (value > 0) value else defaultValue
+    }
+
     private companion object {
         private const val RESET_LEVEL = 400
+        private const val DEFAULT_CHECK_INTERVAL_SECONDS = 60
+        private const val DEFAULT_TELEPORT_WAIT_SECONDS = 30
         private const val USER_IDLE_MS = 30_000L
         private const val IDLE_POLL_MS = 1_000L
         private const val COMMAND_DELAY_MS = 500L
@@ -409,6 +480,7 @@ class BotController(
         private const val SOLO_LEVEL_POLL_MS = 3_000L
         private const val REJOIN_MAX_ATTEMPTS = 3
         private const val REJOIN_CHECK_DELAY_MS = 2_000L
+        private const val REJOIN_AFTER_SOLO_DELAY_MS = 2_000L
         private const val HUNT_TOGGLE_MAX_ATTEMPTS = 3
         private const val HUNT_TOGGLE_DELAY_MS = 800L
         private const val DEBUG_CURSOR_POLL_MS = 5_000L

@@ -46,10 +46,15 @@ import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.WarpMap
 import io.github.mdalfre.bot.BotDebugConfig
+import io.github.mdalfre.bot.BotRuntimeState
+import io.github.mdalfre.model.LogType
+import io.github.mdalfre.web.WebServer
 import io.github.mdalfre.storage.BotSettings
 import io.github.mdalfre.storage.BotSettingsStore
 import io.github.mdalfre.storage.CharacterConfigStore
 import java.awt.EventQueue
+import java.net.Inet4Address
+import java.net.NetworkInterface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,11 +114,13 @@ fun App() {
                 contentAlignment = Alignment.Center
             ) {
                 val botController = remember { BotController() }
+                remember { WebServer.start() }
                 val characters = remember {
                     mutableStateListOf<CharacterConfig>().apply {
                         addAll(CharacterConfigStore.load())
                     }
                 }
+                BotRuntimeState.setCharacters(characters.toList())
                 val statsByName = remember { mutableStateMapOf<String, CharacterStats>() }
                 val statusByName = remember { mutableStateMapOf<String, Boolean>() }
                 val logs = remember { mutableStateListOf<LogEntry>() }
@@ -203,17 +210,28 @@ fun App() {
                 val addFocus = remember { FocusRequester() }
 
                 fun pushLog(entry: LogEntry) {
+                    val decorated = LogEntry(
+                        message = "${timestampPrefix()} ${entry.message}",
+                        type = entry.type
+                    )
                     EventQueue.invokeLater {
                         logs.add(
-                            LogEntry(
-                                message = "${timestampPrefix()} ${entry.message}",
-                                type = entry.type
-                            )
+                            decorated
                         )
                         if (logs.size > 200) {
                             logs.removeRange(0, logs.size - 200)
                         }
                     }
+                    BotRuntimeState.addLog(decorated)
+                }
+                remember {
+                    val url = resolveLanUrl(WebServer.PORT)
+                    if (url != null) {
+                        pushLog(LogEntry("Web dashboard: $url", LogType.INFO))
+                    } else {
+                        pushLog(LogEntry("Web dashboard: LAN IP not found.", LogType.ATTENTION))
+                    }
+                    true
                 }
 
                 Column(
@@ -228,6 +246,8 @@ fun App() {
                             if (isRunning) {
                                 botController.stop()
                                 isRunning = false
+                                BotRuntimeState.isRunning = false
+                                BotRuntimeState.activeName = null
                             } else {
                                 isRunning = true
                                 botController.start(
@@ -235,12 +255,14 @@ fun App() {
                                     onLog = { entry -> pushLog(entry) },
                                     onStats = { characterName, stats ->
                                         EventQueue.invokeLater { statsByName[characterName] = stats }
+                                        BotRuntimeState.setStats(characterName, stats)
                                     },
                                     onStatus = { characterName, found ->
                                         EventQueue.invokeLater { statusByName[characterName] = found }
                                     },
                                     onActive = { name ->
                                         EventQueue.invokeLater { activeName = name }
+                                        BotRuntimeState.activeName = name
                                     },
                                     checkIntervalSeconds = checkIntervalSeconds.toIntOrNull() ?: 60,
                                     teleportWaitSeconds = teleportWaitSeconds.toIntOrNull() ?: 30,
@@ -249,8 +271,11 @@ fun App() {
                                             isRunning = false
                                             activeName = null
                                         }
+                                        BotRuntimeState.isRunning = false
+                                        BotRuntimeState.activeName = null
                                     }
                                 )
+                                BotRuntimeState.isRunning = true
                             }
                         }
                     )
@@ -336,11 +361,11 @@ fun App() {
                             onSubmit = {
                                 errorMessage = null
                                 val overflow = overflowAttribute
-                                if (canAdd && overflow != null) {
-                                    val existingActive = editingIndex?.let { index ->
-                                        characters.getOrNull(index)?.active
-                                    } ?: true
-                                    val updated = CharacterConfig(
+                            if (canAdd && overflow != null) {
+                                val existingActive = editingIndex?.let { index ->
+                                    characters.getOrNull(index)?.active
+                                } ?: true
+                                val updated = CharacterConfig(
                                         name = name.trim(),
                                         str = str.toIntOrNull() ?: 0,
                                         agi = agi.toIntOrNull() ?: 0,
@@ -363,14 +388,15 @@ fun App() {
                                         errorMessage = "A character with this name already exists."
                                         return@CharacterFormCard
                                     }
-                                    if (index == null) {
-                                        characters.add(updated)
-                                        CharacterConfigStore.save(characters)
-                                        resetForm(clearError = false)
-                                    } else if (index in characters.indices) {
-                                        pendingUpdate = updated
-                                        pendingUpdateIndex = index
-                                        return@CharacterFormCard
+                                if (index == null) {
+                                    characters.add(updated)
+                                    CharacterConfigStore.save(characters)
+                                    BotRuntimeState.setCharacters(characters.toList())
+                                    resetForm(clearError = false)
+                                } else if (index in characters.indices) {
+                                    pendingUpdate = updated
+                                    pendingUpdateIndex = index
+                                    return@CharacterFormCard
                                     }
                                 }
                             },
@@ -406,6 +432,7 @@ fun App() {
                                 if (index in characters.indices) {
                                     characters[index] = character.copy(active = active)
                                     CharacterConfigStore.save(characters)
+                                    BotRuntimeState.setCharacters(characters.toList())
                                 }
                             },
                             modifier = Modifier.weight(1.1f)
@@ -430,6 +457,7 @@ fun App() {
                             pendingDelete?.let { statsByName.remove(it.name) }
                             pendingDelete?.let { statusByName.remove(it.name) }
                             CharacterConfigStore.save(characters)
+                            BotRuntimeState.setCharacters(characters.toList())
                             pendingDelete = null
                         },
                         onDismissClear = { pendingClear = false },
@@ -438,6 +466,7 @@ fun App() {
                             statsByName.clear()
                             statusByName.clear()
                             CharacterConfigStore.save(characters)
+                            BotRuntimeState.setCharacters(characters.toList())
                             pendingClear = false
                         },
                         onDismissUpdate = {
@@ -449,6 +478,7 @@ fun App() {
                             if (index in characters.indices) {
                                 characters[index] = pendingUpdate ?: characters[index]
                                 CharacterConfigStore.save(characters)
+                                BotRuntimeState.setCharacters(characters.toList())
                                 resetForm(clearError = false)
                             }
                             pendingUpdate = null
@@ -459,4 +489,13 @@ fun App() {
             }
         }
     }
+}
+
+private fun resolveLanUrl(port: Int): String? {
+    val addresses = NetworkInterface.getNetworkInterfaces().toList()
+        .flatMap { it.inetAddresses.toList() }
+        .filterIsInstance<Inet4Address>()
+        .filter { !it.isLoopbackAddress && it.isSiteLocalAddress }
+    val ip = addresses.firstOrNull()?.hostAddress ?: return null
+    return "http://$ip:$port"
 }

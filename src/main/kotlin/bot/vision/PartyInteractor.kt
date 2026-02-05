@@ -42,35 +42,13 @@ class PartyInteractor(
         image: BufferedImage,
         triedSlots: Set<Int>
     ): Triple<Int, Int, Int>? {
-        val width = image.width
-        val height = image.height
-        val outerPartyRect = Rect(
-            (width * PARTY_X_START).toInt(),
-            (height * PARTY_Y_START).toInt(),
-            (width * PARTY_WIDTH).toInt(),
-            (height * PARTY_HEIGHT).toInt()
-        )
-        val partyRect = Rect(
-            outerPartyRect.x() + (outerPartyRect.width() * PARTY_INNER_X_START).toInt(),
-            outerPartyRect.y(),
-            (outerPartyRect.width() * PARTY_INNER_WIDTH).toInt(),
-            outerPartyRect.height()
-        )
-        val slotHeight = partyRect.height() / PARTY_SLOTS
-        if (slotHeight <= 0) {
-            return null
-        }
-        val availableSlots = (0 until PARTY_SLOTS).filterNot { triedSlots.contains(it) }
+        val availableSlots = PARTY_SLOT_POINTS.indices.filterNot { triedSlots.contains(it) }
         if (availableSlots.isEmpty()) {
             return null
         }
         val slotIndex = availableSlots.random()
-        val clickX = partyRect.x() + (partyRect.width() * NAME_CLICK_X).toInt()
-        val clickY = partyRect.y() +
-            ((slotIndex + PARTY_SLOT_OFFSET) * slotHeight).toInt() +
-            (slotHeight * SLOT_CLICK_Y).toInt() +
-            SLOT_CLICK_Y_OFFSET_PX
-        return Triple(clickX, clickY, slotIndex)
+        val point = PARTY_SLOT_POINTS[slotIndex]
+        return Triple(point.first, point.second, slotIndex)
     }
 
     private fun findOkButtonClick(image: BufferedImage): Pair<Int, Int>? {
@@ -107,17 +85,13 @@ class PartyInteractor(
 
 
     private companion object {
-        private const val PARTY_X_START = 0.74
-        private const val PARTY_Y_START = 0.12
-        private const val PARTY_WIDTH = 0.24
-        private const val PARTY_HEIGHT = 0.32
-        private const val PARTY_INNER_X_START = 0.5
-        private const val PARTY_INNER_WIDTH = 0.5
-        private const val PARTY_SLOTS = 5
-        private const val NAME_CLICK_X = 0.6
-        private const val SLOT_CLICK_Y = 0.5
-        private const val PARTY_SLOT_OFFSET = 1.0
-        private const val SLOT_CLICK_Y_OFFSET_PX = -10
+        private val PARTY_SLOT_POINTS = listOf(
+            957 to 158,
+            957 to 218,
+            957 to 278,
+            957 to 338,
+            957 to 398
+        )
         private const val OK_REGION_X = 0.35
         private const val OK_REGION_Y = 0.45
         private const val OK_REGION_W = 0.3
