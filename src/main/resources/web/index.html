@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MUreset</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #0f0f0f; color: #f0e6cc; }
+    header { padding: 16px; background: #15110c; border-bottom: 1px solid #2a2215; }
+    h1 { margin: 0; font-size: 18px; color: #c8a24a; }
+    .status { font-size: 13px; color: #d7c59a; }
+    .container { padding: 16px; display: grid; gap: 16px; }
+    .card { background: #1b160f; border: 1px solid #2a2215; border-radius: 8px; padding: 12px; }
+    .card h2 { margin: 0 0 8px 0; font-size: 14px; color: #c8a24a; }
+    .grid { display: grid; gap: 12px; }
+    .logs { max-height: 300px; overflow: auto; font-size: 12px; }
+    .log-info { color: #e6dcc0; }
+    .log-important { color: #f2c94c; }
+    .log-attention { color: #e06c75; }
+    img { width: 100%; border-radius: 6px; border: 1px solid #2a2215; }
+    .small { font-size: 12px; color: #bda97a; }
+    .shot-name { text-align: center; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MUreset</h1>
+    <div class="status" id="status">Loading...</div>
+  </header>
+  <div class="container">
+    <div class="card">
+      <h2>Characters</h2>
+      <div id="characters" class="small"></div>
+    </div>
+    <div class="card">
+      <h2>Stats</h2>
+      <div id="stats" class="small"></div>
+    </div>
+    <div class="card">
+      <h2>Last Screenshots</h2>
+      <div id="screenshots" class="grid"></div>
+    </div>
+    <div class="card">
+      <h2>Logs</h2>
+      <div id="logs" class="logs"></div>
+    </div>
+  </div>
+  <script>
+    async function fetchJson(url) { const res = await fetch(url); return res.json(); }
+    function esc(s) { return (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    async function refresh() {
+      const status = await fetchJson('/api/status');
+      document.getElementById('status').textContent = `Status: ${'$'}{status.status}${'$'}{status.active ? ' | Active: ' + status.active : ''}`;
+      const chars = await fetchJson('/api/characters');
+      document.getElementById('characters').innerHTML = chars.map(c =>
+        `<div>${'$'}{esc(c.name)} - ${'$'}{c.active ? 'active' : 'inactive'} - ${'$'}{esc(c.warpMap)} - solo ${'$'}{c.soloLevel}</div>`
+      ).join('');
+      const stats = await fetchJson('/api/stats');
+      document.getElementById('stats').innerHTML = stats.map(s =>
+        `<div>${'$'}{esc(s.name)}: lvl ${'$'}{s.level}, master ${'$'}{s.masterLevel}, resets ${'$'}{s.resets}</div>`
+      ).join('');
+      const logs = await fetchJson('/api/logs');
+      document.getElementById('logs').innerHTML = logs.map(l =>
+        `<div class="log-${'$'}{l.type}">${'$'}{esc(l.message)}</div>`
+      ).join('');
+      document.getElementById('screenshots').innerHTML = chars.filter(c => c.active).map(c =>
+        `<div><div class="small shot-name">${'$'}{esc(c.name)}</div><img src="/api/screenshot/${'$'}{encodeURIComponent(c.name)}?t=${'$'}{Date.now()}" /></div>`
+      ).join('');
+    }
+    refresh();
+    setInterval(refresh, 60000);
+  </script>
+</body>
+</html>

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.mdalfre"
-version = "1.0.3"
+version = "1.0.4"
 
 repositories {
     mavenCentral()
@@ -18,6 +18,8 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
+    implementation("io.ktor:ktor-server-core-jvm:2.3.12")
+    implementation("io.ktor:ktor-server-netty-jvm:2.3.12")
     implementation("net.java.dev.jna:jna:5.14.0")
     implementation("net.java.dev.jna:jna-platform:5.14.0")
     implementation("org.bytedeco:opencv:4.9.0-1.5.10")

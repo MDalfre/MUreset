@@ -1,65 +1,77 @@
 # MUreset
 
-Automação para MU Online (Windows) com UI em **Compose Desktop**. O app gerencia uma lista de personagens e executa o fluxo de `/reset` automaticamente quando o personagem atinge o nível alvo, distribuindo pontos de acordo com a configuração.
+Desktop automation for MU Online (Windows) built with **Compose Desktop**. The app manages character profiles and runs a full reset workflow when a character hits the target level, distributing points based on your configuration.
 
-## Resumo rápido
-- **UI**: cadastro de personagens, atributos, mapas e logs.
-- **Bot**: procura janelas do jogo pelo título, lê stats, executa `/reset`, distribui pontos e verifica retorno ao modo hunt usando OpenCV.
-- **Persistência**: salva a lista em `~/.mureset-characters.cfg`.
+## Quick Summary
+- **UI**: character profiles, attributes, solo level, warp map, logs.
+- **Bot**: finds game windows, reads stats, runs `/reset`, distributes points, warps, toggles hunt, and re-joins party.
+- **Persistence**: saves character list and bot settings in the project root.
+- **Web Dashboard (LAN)**: status, logs, characters, stats, and screenshots.
 
-## Requisitos
-- **Windows** (usa APIs Win32 via JNA).
-- **JDK 17** (Gradle usa toolchain 17).
+## Requirements
+- **Windows** (Win32 APIs via JNA)
+- **JDK 17** (Gradle toolchain 17)
 
-## Como rodar (dev)
+## Run (dev)
 ```bash
 ./gradlew run
 ```
 
-## Como gerar executável
+## Build (Windows executable)
 ```bash
 ./gradlew package
 ```
-Saída típica do app:
+Typical output:
 - `build/compose/binaries/main/app/MUreset/MUreset.exe`
 
-## Como usar
-1. Abra o jogo com os personagens desejados.
-2. No app, clique em **Add character** e preencha:
-   - **Name**: deve bater com o nome do personagem no título da janela do jogo.
+## How to Use
+1. Open the game with the desired characters.
+2. In the app, click **Add character** and fill:
+   - **Name**: must match the character name in the window title.
    - **Attributes** (Str/Agi/Sta/Ene/Cmd).
-   - **Points/Reset**: pontos por reset do servidor.
-   - **Solo level**: nível alvo para o modo solo após o reset.
-   - **Warp map**: mapa de teleporte (ex.: Elbeland 2 / Elbeland 3).
-   - **Overflow attribute**: atributo que recebe o restante dos pontos.
-3. Clique **Start** para iniciar o bot.
+   - **Points/Reset**: points per reset on your server.
+   - **Solo level**: target level after reset.
+   - **Warp map**: Elbeland 2 or Elbeland 3.
+   - **Overflow attribute**: attribute that receives remaining points.
+3. Click **Start**.
 
-## Como o bot funciona
-- Procura janelas com prefixo:
-  - `GlobalMuOnline - Powered by IGCN - Name: [NOME]`
-- Extrai **Level**, **Master Level** e **Resets** do título da janela.
-- Quando `Level == 400`, executa:
-  - `/reset`
-  - distribuição de pontos via `/addstr`, `/addagi`, `/addvit`, `/addene`, `/addcmd`
-- Após reset, o bot:
-  1. Teleporta para o **Warp map** configurado.
-  2. Liga o Hunt com a tecla **Home**.
-  3. Aguarda até atingir o **Solo level**.
-  4. Retoma a rotina normal (party click + detecção de hunt).
-- **Espera inatividade do usuário**: só roda se o PC estiver ocioso por 30s.
+## Bot Flow
+- Finds windows by title prefix:
+  - `GlobalMuOnline - Powered by IGCN - Name: [NAME]`
+- Parses **Level**, **Master Level**, **Resets** from the title.
+- When `Level == 400`:
+  - executes `/reset`
+  - distributes points via `/addstr`, `/addagi`, `/addvit`, `/addene`, `/addcmd`
+  - caps overflow at **32,600** (logs remaining points if exceeded)
+- After reset:
+  1. Warp to the configured map.
+  2. Toggle hunt with **Home** (with validation retries).
+  3. Wait until **Solo level** is reached.
+  4. Re-join party and validate exit from Elbeland (retries if needed).
+- **Idle guard**: waits for 30s of user inactivity before running.
 
-## Configuração salva
-Arquivo: `~/.mureset-characters.cfg`
-- Formato interno com `|` e `;` escapados, não precisa editar manualmente.
+## Web Dashboard (LAN)
+- Server runs on: `http://<LAN-IP>:8765`
+- Shows:
+  - bot status + active character
+  - last logs
+  - characters list
+  - per-character stats (level/master/resets)
+  - latest screenshot per active character
 
-## Recursos visuais (templates)
-Usados pelo OpenCV:
+## Saved Config Files (USER_HOME)
+- `~/.mureset-characters.cfg`
+- `~/.mureset-settings.cfg`
+
+## Visual Templates (OpenCV)
 - `src/main/resources/play_button_template.png`
 - `src/main/resources/pause_button_template.png`
 - `src/main/resources/ok_dialog_template.png`
 - `src/main/resources/elbeland2_template.png`
 - `src/main/resources/elbeland3_template.png`
+- `src/main/resources/current_map_elbeland.png`
+- `src/main/resources/quest_dialog_template.png`
 
-## Observações
-- O bot usa `Robot` para mouse/teclado. Evite usar o PC enquanto ele estiver ativo.
-- Se o título da janela do jogo mudar, a detecção precisa ser ajustada em `BotController.windowPrefix`.
+## Notes
+- The bot uses `Robot` for mouse/keyboard. Avoid using the PC while it runs.
+- If the game window title changes, update `BotController.windowPrefix`.
