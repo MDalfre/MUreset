@@ -51,21 +51,21 @@
     function esc(s) { return (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
     async function refresh() {
       const status = await fetchJson('/api/status');
-      document.getElementById('status').textContent = `Status: ${'$'}{status.status}${'$'}{status.active ? ' | Active: ' + status.active : ''}`;
+      document.getElementById('status').textContent = `Status: ${status.status}${status.active ? ' | Active: ' + status.active : ''}`;
       const chars = await fetchJson('/api/characters');
       document.getElementById('characters').innerHTML = chars.map(c =>
-        `<div>${'$'}{esc(c.name)} - ${'$'}{c.active ? 'active' : 'inactive'} - ${'$'}{esc(c.warpMap)} - solo ${'$'}{c.soloLevel}</div>`
+        `<div>${esc(c.name)} - ${c.active ? 'active' : 'inactive'} - ${esc(c.warpMap)} - solo ${c.soloLevel}</div>`
       ).join('');
       const stats = await fetchJson('/api/stats');
       document.getElementById('stats').innerHTML = stats.map(s =>
-        `<div>${'$'}{esc(s.name)}: lvl ${'$'}{s.level}, master ${'$'}{s.masterLevel}, resets ${'$'}{s.resets}</div>`
+        `<div>${esc(s.name)}: lvl ${s.level}, master ${s.masterLevel}, resets ${s.resets}</div>`
       ).join('');
       const logs = await fetchJson('/api/logs');
       document.getElementById('logs').innerHTML = logs.map(l =>
-        `<div class="log-${'$'}{l.type}">${'$'}{esc(l.message)}</div>`
+        `<div class="log-${l.type}">${esc(l.message)}</div>`
       ).join('');
       document.getElementById('screenshots').innerHTML = chars.filter(c => c.active).map(c =>
-        `<div><div class="small shot-name">${'$'}{esc(c.name)}</div><img src="/api/screenshot/${'$'}{encodeURIComponent(c.name)}?t=${'$'}{Date.now()}" /></div>`
+        `<div><div class="small shot-name">${esc(c.name)}</div><img src="/api/screenshot/${encodeURIComponent(c.name)}?t=${Date.now()}" /></div>`
       ).join('');
     }
     refresh();
