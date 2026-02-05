@@ -229,7 +229,7 @@ class BotController(
         stats: CharacterStats,
         onLog: (LogEntry) -> Unit
     ) {
-        val totalPoints = stats.resets * character.pointsPerReset
+        val totalPoints = (stats.resets + 1) * character.pointsPerReset
         if (totalPoints <= 0) {
             onLog(attentionLog("Invalid total points for ${character.name}"))
             return
@@ -239,10 +239,15 @@ class BotController(
         val usedPoints = basePoints.entries
             .filter { it.key != overflowAttr }
             .sumOf { it.value }
-        val overflowPoints = totalPoints - usedPoints
+        var overflowPoints = totalPoints - usedPoints
         if (overflowPoints < 0) {
             onLog(attentionLog("Configured points exceed available total for ${character.name}"))
             return
+        }
+        if (overflowPoints > OVERFLOW_CAP) {
+            val remaining = overflowPoints - OVERFLOW_CAP
+            overflowPoints = OVERFLOW_CAP
+            onLog(attentionLog("${character.name} overflow capped at $OVERFLOW_CAP. Remaining points: $remaining"))
         }
 
         windowActions.focus(window)
@@ -407,6 +412,7 @@ class BotController(
         private const val HUNT_TOGGLE_MAX_ATTEMPTS = 3
         private const val HUNT_TOGGLE_DELAY_MS = 800L
         private const val DEBUG_CURSOR_POLL_MS = 5_000L
+        private const val OVERFLOW_CAP = 32_600
         private val TITLE_REGEX = Regex(
             """Name:\s*\[(.+?)]\s*Level:\s*\[(\d+)]\s*Master Level:\s*\[(\d+)]\s*Resets:\s*\[(\d+)]"""
         )
