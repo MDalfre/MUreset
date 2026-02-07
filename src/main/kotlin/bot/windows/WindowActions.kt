@@ -40,6 +40,14 @@ class WindowActions {
         BotInputTracker.markBotInput()
     }
 
+    fun sendCtrlKey(keyCode: Int) {
+        robot.keyPress(KeyEvent.VK_CONTROL)
+        robot.keyPress(keyCode)
+        robot.keyRelease(keyCode)
+        robot.keyRelease(KeyEvent.VK_CONTROL)
+        BotInputTracker.markBotInput()
+    }
+
     fun clickAt(x: Int, y: Int) {
         robot.mouseMove(x, y)
         robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)

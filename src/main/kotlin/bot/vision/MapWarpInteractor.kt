@@ -14,8 +14,7 @@ import io.github.mdalfre.model.WarpMap
 class MapWarpInteractor(
     private val windowActions: WindowActions = WindowActions()
 ) {
-    private val elbeland3Template: Mat? = VisionUtils.loadTemplate("/elbeland3_template.png")
-    private val elbeland2Template: Mat? = VisionUtils.loadTemplate("/elbeland2_template.png")
+    private val templateCache = mutableMapOf<WarpMap, Mat?>()
 
     fun warpToMap(window: WindowInfo, map: WarpMap, onLog: (LogEntry) -> Unit = {}): Boolean {
         val template = getTemplate(map)
@@ -62,13 +61,7 @@ class MapWarpInteractor(
             template = template,
             threshold = TEMPLATE_THRESHOLD
         )
-        val anchorTemplate = when (map) {
-            WarpMap.ELBELAND_3 -> elbeland2Template
-            WarpMap.ELBELAND_2 -> elbeland3Template
-        }
-        if (anchorTemplate == null) {
-            return baseMatch
-        }
+        val anchorTemplate = getTemplate(otherMap(map)) ?: return baseMatch
         val anchorMatch = findTemplateClickInRegion(
             bgr,
             roiRect,
@@ -127,9 +120,15 @@ class MapWarpInteractor(
 
 
     private fun getTemplate(map: WarpMap): Mat? {
+        return templateCache.getOrPut(map) {
+            VisionUtils.loadTemplate(map.templateResource)
+        }
+    }
+
+    private fun otherMap(map: WarpMap): WarpMap {
         return when (map) {
-            WarpMap.ELBELAND_2 -> elbeland2Template
-            WarpMap.ELBELAND_3 -> elbeland3Template
+            WarpMap.ELBELAND_2 -> WarpMap.ELBELAND_3
+            WarpMap.ELBELAND_3 -> WarpMap.ELBELAND_2
         }
     }
 

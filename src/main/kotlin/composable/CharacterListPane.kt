@@ -129,7 +129,7 @@ fun CharacterListPane(
                                                 enabled = !state.isRunning
                                             )
                                             Text(
-                                                text = "Ativo",
+                                                text = "Active",
                                                 fontSize = 12.sp,
                                                 color = if (character.active) {
                                                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)

@@ -147,6 +147,7 @@ fun App() {
                 val savedSettings = remember { BotSettingsStore.load() }
                 var checkIntervalSeconds by remember { mutableStateOf(savedSettings.checkIntervalSeconds.toString()) }
                 var teleportWaitSeconds by remember { mutableStateOf(savedSettings.teleportWaitSeconds.toString()) }
+                var cpuSavingMode by remember { mutableStateOf(savedSettings.cpuSavingMode) }
                 var showForm by remember { mutableStateOf(false) }
 
                 fun resetForm(clearError: Boolean = true) {
@@ -266,6 +267,7 @@ fun App() {
                                     },
                                     checkIntervalSeconds = checkIntervalSeconds.toIntOrNull() ?: 60,
                                     teleportWaitSeconds = teleportWaitSeconds.toIntOrNull() ?: 30,
+                                    cpuSavingMode = cpuSavingMode,
                                     onComplete = {
                                         EventQueue.invokeLater {
                                             isRunning = false
@@ -284,6 +286,7 @@ fun App() {
                         state = SettingsState(
                             checkIntervalSeconds = checkIntervalSeconds,
                             teleportWaitSeconds = teleportWaitSeconds,
+                            cpuSavingMode = cpuSavingMode,
                             showForm = showForm,
                             isRunning = isRunning
                         ),
@@ -291,13 +294,19 @@ fun App() {
                             checkIntervalSeconds = digitsOnly(value)
                             val check = checkIntervalSeconds.toIntOrNull() ?: 60
                             val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
-                            BotSettingsStore.save(BotSettings(check, teleport))
+                            BotSettingsStore.save(BotSettings(check, teleport, cpuSavingMode))
                         },
                         onTeleportWaitChange = { value ->
                             teleportWaitSeconds = digitsOnly(value)
                             val check = checkIntervalSeconds.toIntOrNull() ?: 60
                             val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
-                            BotSettingsStore.save(BotSettings(check, teleport))
+                            BotSettingsStore.save(BotSettings(check, teleport, cpuSavingMode))
+                        },
+                        onCpuSavingModeChange = { enabled ->
+                            cpuSavingMode = enabled
+                            val check = checkIntervalSeconds.toIntOrNull() ?: 60
+                            val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
+                            BotSettingsStore.save(BotSettings(check, teleport, cpuSavingMode))
                         },
                         onToggleForm = { showForm = !showForm }
                     )

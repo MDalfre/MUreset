@@ -8,6 +8,7 @@ import io.github.mdalfre.model.LogEntry
 data class SettingsState(
     val checkIntervalSeconds: String,
     val teleportWaitSeconds: String,
+    val cpuSavingMode: Boolean,
     val showForm: Boolean,
     val isRunning: Boolean
 )
