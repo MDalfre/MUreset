@@ -16,7 +16,7 @@ fun ConfirmDialogs(
     onDismissClear: () -> Unit,
     onConfirmClear: () -> Unit,
     onDismissUpdate: () -> Unit,
-    onConfirmUpdate: () -> Unit
+    onConfirmUpdate: () -> Unit,
 ) {
     if (pendingDelete != null) {
         AlertDialog(
@@ -26,15 +26,15 @@ fun ConfirmDialogs(
             confirmButton = {
                 StyledButton(
                     text = "Remove",
-                    onClick = onConfirmDelete
+                    onClick = onConfirmDelete,
                 )
             },
             dismissButton = {
                 StyledButton(
                     text = "Cancel",
-                    onClick = onDismissDelete
+                    onClick = onDismissDelete,
                 )
-            }
+            },
         )
     }
 
@@ -46,15 +46,15 @@ fun ConfirmDialogs(
             confirmButton = {
                 StyledButton(
                     text = "Clear",
-                    onClick = onConfirmClear
+                    onClick = onConfirmClear,
                 )
             },
             dismissButton = {
                 StyledButton(
                     text = "Cancel",
-                    onClick = onDismissClear
+                    onClick = onDismissClear,
                 )
-            }
+            },
         )
     }
 
@@ -66,15 +66,15 @@ fun ConfirmDialogs(
             confirmButton = {
                 StyledButton(
                     text = "Update",
-                    onClick = onConfirmUpdate
+                    onClick = onConfirmUpdate,
                 )
             },
             dismissButton = {
                 StyledButton(
                     text = "Cancel",
-                    onClick = onDismissUpdate
+                    onClick = onDismissUpdate,
                 )
-            }
+            },
         )
     }
 }

@@ -1,17 +1,17 @@
 package io.github.mdalfre.bot.vision
 
-import kotlin.math.max
-import org.bytedeco.opencv.global.opencv_imgproc
-import org.bytedeco.opencv.opencv_core.Mat
-import org.bytedeco.opencv.opencv_core.Size
 import io.github.mdalfre.bot.OpenCVBootstrap
 import io.github.mdalfre.bot.windows.WindowActions
 import io.github.mdalfre.bot.windows.WindowInfo
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.LogType
+import org.bytedeco.opencv.global.opencv_imgproc
+import org.bytedeco.opencv.opencv_core.Mat
+import org.bytedeco.opencv.opencv_core.Size
+import kotlin.math.max
 
 class HuntModeDetector(
-    private val windowActions: WindowActions = WindowActions()
+    private val windowActions: WindowActions = WindowActions(),
 ) {
     private val playTemplateColor: Mat? = VisionUtils.loadTemplate("/play_button_template.png")
     private val pauseTemplateColor: Mat? = VisionUtils.loadTemplate("/pause_button_template.png")
@@ -22,7 +22,7 @@ class HuntModeDetector(
         window: WindowInfo,
         timeoutMs: Long,
         pollMs: Long = 600L,
-        onLog: (LogEntry) -> Unit = {}
+        onLog: (LogEntry) -> Unit = {},
     ): Boolean {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
@@ -47,37 +47,44 @@ class HuntModeDetector(
         val (pauseScoreColor, _) = matchScoreMultiScale(roi, pauseTemplateColor)
         val (playScoreColor, _) = matchScoreMultiScale(roi, playTemplateColor)
         val roiEdges = toEdges(roi)
-        val (pauseScoreEdges, _) = pauseTemplateEdges?.let { matchScoreMultiScale(roiEdges, it) }
-            ?: (-1.0 to 1.0)
-        val (playScoreEdges, _) = playTemplateEdges?.let { matchScoreMultiScale(roiEdges, it) }
-            ?: (-1.0 to 1.0)
+        val (pauseScoreEdges, _) =
+            pauseTemplateEdges?.let { matchScoreMultiScale(roiEdges, it) }
+                ?: (-1.0 to 1.0)
+        val (playScoreEdges, _) =
+            playTemplateEdges?.let { matchScoreMultiScale(roiEdges, it) }
+                ?: (-1.0 to 1.0)
         val colorDiff = pauseScoreColor - playScoreColor
         val edgeDiff = pauseScoreEdges - playScoreEdges
-        val decision = when {
-            max(pauseScoreColor, playScoreColor) >= COLOR_ACTIVE_MIN -> {
-                when {
-                    colorDiff >= COLOR_ACTIVE_GAP -> true
-                    -colorDiff >= COLOR_ACTIVE_GAP -> false
-                    else -> false
+        val decision =
+            when {
+                max(pauseScoreColor, playScoreColor) >= COLOR_ACTIVE_MIN -> {
+                    when {
+                        colorDiff >= COLOR_ACTIVE_GAP -> true
+                        -colorDiff >= COLOR_ACTIVE_GAP -> false
+                        else -> false
+                    }
                 }
-            }
-            max(pauseScoreEdges, playScoreEdges) >= EDGE_ACTIVE_MIN -> {
-                when {
-                    edgeDiff >= EDGE_ACTIVE_GAP -> true
-                    -edgeDiff >= EDGE_ACTIVE_GAP -> false
-                    else -> false
+                max(pauseScoreEdges, playScoreEdges) >= EDGE_ACTIVE_MIN -> {
+                    when {
+                        edgeDiff >= EDGE_ACTIVE_GAP -> true
+                        -edgeDiff >= EDGE_ACTIVE_GAP -> false
+                        else -> false
+                    }
                 }
+                else -> false
             }
-            else -> false
-        }
         return decision
     }
 
-    private fun matchScore(region: Mat, template: Mat): Double {
-        return VisionUtils.matchTemplateScore(region, template)
-    }
+    private fun matchScore(
+        region: Mat,
+        template: Mat,
+    ): Double = VisionUtils.matchTemplateScore(region, template)
 
-    private fun matchScoreMultiScale(region: Mat, template: Mat): Pair<Double, Double> {
+    private fun matchScoreMultiScale(
+        region: Mat,
+        template: Mat,
+    ): Pair<Double, Double> {
         var bestScore = -1.0
         var bestScale = 1.0
         for (scale in TEMPLATE_SCALES) {

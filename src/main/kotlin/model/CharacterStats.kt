@@ -3,5 +3,5 @@ package io.github.mdalfre.model
 data class CharacterStats(
     val level: Int,
     val masterLevel: Int,
-    val resets: Int
+    val resets: Int,
 )

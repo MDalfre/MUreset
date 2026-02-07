@@ -1,29 +1,28 @@
 package io.github.mdalfre.bot
 
+import io.github.mdalfre.bot.vision.CurrentMapDetector
+import io.github.mdalfre.bot.vision.HuntModeDetector
+import io.github.mdalfre.bot.vision.MapWarpInteractor
+import io.github.mdalfre.bot.vision.PartyInteractor
+import io.github.mdalfre.bot.vision.QuestDialogCloser
+import io.github.mdalfre.bot.vision.SwitchModeDetector
+import io.github.mdalfre.bot.windows.BotInputTracker
+import io.github.mdalfre.bot.windows.DebugHotkeyMonitor
+import io.github.mdalfre.bot.windows.UserInputIdleMonitor
 import io.github.mdalfre.bot.windows.WindowActions
 import io.github.mdalfre.bot.windows.WindowFinder
-import io.github.mdalfre.bot.windows.UserInputIdleMonitor
-import io.github.mdalfre.bot.windows.BotInputTracker
+import io.github.mdalfre.bot.windows.WindowInfo
 import io.github.mdalfre.model.AttributeType
 import io.github.mdalfre.model.CharacterConfig
 import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.LogType
-import io.github.mdalfre.bot.BotRuntimeState
-import io.github.mdalfre.bot.vision.CurrentMapDetector
-import io.github.mdalfre.bot.vision.PartyInteractor
-import io.github.mdalfre.bot.vision.HuntModeDetector
-import io.github.mdalfre.bot.vision.MapWarpInteractor
-import io.github.mdalfre.bot.vision.QuestDialogCloser
-import io.github.mdalfre.bot.vision.SwitchModeDetector
-import io.github.mdalfre.bot.windows.DebugHotkeyMonitor
-import io.github.mdalfre.bot.windows.WindowInfo
 import java.awt.event.KeyEvent
 
 class BotController(
     private val windowFinder: WindowFinder = WindowFinder(),
     private val windowActions: WindowActions = WindowActions(),
-    private val idleMonitor: UserInputIdleMonitor = UserInputIdleMonitor()
+    private val idleMonitor: UserInputIdleMonitor = UserInputIdleMonitor(),
 ) {
     @Volatile
     private var running = false
@@ -34,6 +33,7 @@ class BotController(
     private val questDialogCloser = QuestDialogCloser(windowActions)
     private val switchModeDetector = SwitchModeDetector(windowActions)
     private val debugHotkeyMonitor = DebugHotkeyMonitor()
+
     @Volatile
     private var debugCursorRunning = false
 
@@ -46,7 +46,7 @@ class BotController(
         checkIntervalSeconds: Int = 60,
         teleportWaitSeconds: Int = 30,
         cpuSavingMode: Boolean = false,
-        onComplete: () -> Unit = {}
+        onComplete: () -> Unit = {},
     ) {
         if (running) {
             return
@@ -63,7 +63,7 @@ class BotController(
                     onActive,
                     checkIntervalSeconds,
                     teleportWaitSeconds,
-                    cpuSavingMode
+                    cpuSavingMode,
                 )
             } finally {
                 running = false
@@ -87,7 +87,7 @@ class BotController(
         onActive: (String?) -> Unit,
         checkIntervalSeconds: Int,
         teleportWaitSeconds: Int,
-        cpuSavingMode: Boolean
+        cpuSavingMode: Boolean,
     ) {
         var cycle = 0
         val intervalSeconds = normalizeSeconds(checkIntervalSeconds, DEFAULT_CHECK_INTERVAL_SECONDS)
@@ -106,16 +106,17 @@ class BotController(
                 if (!waitForUserIdle(onLog)) {
                     return
                 }
-                val continueRun = processCharacter(
-                    character = character,
-                    resetThisCycle = resetThisCycle,
-                    huntWaitTimeoutMs = huntWaitTimeoutMs,
-                    onLog = onLog,
-                    onStats = onStats,
-                    onStatus = onStatus,
-                    onActive = onActive,
-                    cpuSavingMode = cpuSavingMode
-                )
+                val continueRun =
+                    processCharacter(
+                        character = character,
+                        resetThisCycle = resetThisCycle,
+                        huntWaitTimeoutMs = huntWaitTimeoutMs,
+                        onLog = onLog,
+                        onStats = onStats,
+                        onStatus = onStatus,
+                        onActive = onActive,
+                        cpuSavingMode = cpuSavingMode,
+                    )
                 if (!continueRun) {
                     return
                 }
@@ -148,7 +149,7 @@ class BotController(
         onStats: (String, CharacterStats) -> Unit,
         onStatus: (String, Boolean) -> Unit,
         onActive: (String?) -> Unit,
-        cpuSavingMode: Boolean
+        cpuSavingMode: Boolean,
     ): Boolean {
         onActive(character.name)
         try {
@@ -158,15 +159,16 @@ class BotController(
                 if (!running) {
                     return false
                 }
-                val shouldContinue = handleWindow(
-                    window = window,
-                    character = character,
-                    resetThisCycle = resetThisCycle,
-                    huntWaitTimeoutMs = huntWaitTimeoutMs,
-                    onLog = onLog,
-                    onStats = onStats,
-                    cpuSavingMode = cpuSavingMode
-                )
+                val shouldContinue =
+                    handleWindow(
+                        window = window,
+                        character = character,
+                        resetThisCycle = resetThisCycle,
+                        huntWaitTimeoutMs = huntWaitTimeoutMs,
+                        onLog = onLog,
+                        onStats = onStats,
+                        cpuSavingMode = cpuSavingMode,
+                    )
                 if (!shouldContinue) {
                     return false
                 }
@@ -184,7 +186,7 @@ class BotController(
         huntWaitTimeoutMs: Long,
         onLog: (LogEntry) -> Unit,
         onStats: (String, CharacterStats) -> Unit,
-        cpuSavingMode: Boolean
+        cpuSavingMode: Boolean,
     ): Boolean {
         onLog(infoLog("Selecting: ${character.name}"))
         val parsed = parseStats(window.title) ?: return true
@@ -223,7 +225,7 @@ class BotController(
         stats: CharacterStats,
         huntWaitTimeoutMs: Long,
         onLog: (LogEntry) -> Unit,
-        onStats: (String, CharacterStats) -> Unit
+        onStats: (String, CharacterStats) -> Unit,
     ): Boolean {
         questDialogCloser.closeIfPresent(window, onLog)
         performResetRoutine(window, character, stats, onLog)
@@ -242,7 +244,7 @@ class BotController(
         character: CharacterConfig,
         stats: CharacterStats,
         huntWaitTimeoutMs: Long,
-        onLog: (LogEntry) -> Unit
+        onLog: (LogEntry) -> Unit,
     ) {
         val huntOk = huntModeDetector.waitForHuntMode(window, huntWaitTimeoutMs, onLog = onLog)
         if (!huntOk) {
@@ -253,16 +255,26 @@ class BotController(
         onLog(importantLog("${character.name} reset complete -> Resets: ${stats.resets + 1}"))
     }
 
-    private fun logStats(character: CharacterConfig, stats: CharacterStats, onLog: (LogEntry) -> Unit) {
+    private fun logStats(
+        character: CharacterConfig,
+        stats: CharacterStats,
+        onLog: (LogEntry) -> Unit,
+    ) {
         onLog(infoLog("${character.name} Level: ${stats.level} Master Level: ${stats.masterLevel} Resets: ${stats.resets}"))
     }
 
-    private fun focusAndCapture(character: CharacterConfig, window: WindowInfo) {
+    private fun focusAndCapture(
+        character: CharacterConfig,
+        window: WindowInfo,
+    ) {
         windowActions.focus(window)
         captureScreenshot(character, window)
     }
 
-    private fun captureScreenshot(character: CharacterConfig, window: WindowInfo) {
+    private fun captureScreenshot(
+        character: CharacterConfig,
+        window: WindowInfo,
+    ) {
         if (!character.active) {
             return
         }
@@ -314,7 +326,7 @@ class BotController(
         window: WindowInfo,
         character: CharacterConfig,
         stats: CharacterStats,
-        onLog: (LogEntry) -> Unit
+        onLog: (LogEntry) -> Unit,
     ) {
         val totalPoints = (stats.resets + 1) * character.pointsPerReset
         if (totalPoints <= 0) {
@@ -323,9 +335,10 @@ class BotController(
         }
         val basePoints = basePoints(character)
         val overflowAttr = character.overflowAttribute
-        val usedPoints = basePoints.entries
-            .filter { it.key != overflowAttr }
-            .sumOf { it.value }
+        val usedPoints =
+            basePoints.entries
+                .filter { it.key != overflowAttr }
+                .sumOf { it.value }
         var overflowPoints = totalPoints - usedPoints
         if (overflowPoints < 0) {
             onLog(attentionLog("Configured points exceed available total for ${character.name}"))
@@ -342,10 +355,11 @@ class BotController(
         Thread.sleep(2000)
         onLog(importantLog("Reset executed for ${character.name}."))
 
-        val commands = ATTRIBUTE_COMMANDS.map { (attr, prefix) ->
-            val value = if (attr == overflowAttr) overflowPoints else basePoints[attr] ?: 0
-            "$prefix $value" to value
-        }
+        val commands =
+            ATTRIBUTE_COMMANDS.map { (attr, prefix) ->
+                val value = if (attr == overflowAttr) overflowPoints else basePoints[attr] ?: 0
+                "$prefix $value" to value
+            }
 
         for ((command, value) in commands) {
             if (!running) {
@@ -363,7 +377,7 @@ class BotController(
         window: WindowInfo,
         character: CharacterConfig,
         onLog: (LogEntry) -> Unit,
-        onStats: (String, CharacterStats) -> Unit
+        onStats: (String, CharacterStats) -> Unit,
     ): Boolean {
         val targetLevel = character.soloLevel
         if (targetLevel <= 0) {
@@ -381,7 +395,7 @@ class BotController(
     private fun ensureHuntModeActive(
         window: WindowInfo,
         character: CharacterConfig,
-        onLog: (LogEntry) -> Unit
+        onLog: (LogEntry) -> Unit,
     ) {
         repeat(HUNT_TOGGLE_MAX_ATTEMPTS) { attempt ->
             if (!running) {
@@ -405,7 +419,7 @@ class BotController(
         window: WindowInfo,
         character: CharacterConfig,
         desiredActive: Boolean,
-        onLog: (LogEntry) -> Unit
+        onLog: (LogEntry) -> Unit,
     ) {
         val currentActive = switchModeDetector.isSwitchActive(window)
         if (currentActive == desiredActive) {
@@ -424,7 +438,7 @@ class BotController(
     private fun rejoinPartyWithRetry(
         window: WindowInfo,
         character: CharacterConfig,
-        onLog: (LogEntry) -> Unit
+        onLog: (LogEntry) -> Unit,
     ) {
         var stillElbeland = true
         repeat(REJOIN_MAX_ATTEMPTS) {
@@ -449,7 +463,7 @@ class BotController(
         character: CharacterConfig,
         targetLevel: Int,
         onLog: (LogEntry) -> Unit,
-        onStats: (String, CharacterStats) -> Unit
+        onStats: (String, CharacterStats) -> Unit,
     ): Boolean {
         onLog(infoLog("Waiting ${character.name} reach level $targetLevel..."))
         while (running) {
@@ -474,19 +488,16 @@ class BotController(
 
     private fun attentionLog(message: String) = LogEntry(message, LogType.ATTENTION)
 
-    private fun basePoints(character: CharacterConfig): Map<AttributeType, Int> {
-        return mapOf(
+    private fun basePoints(character: CharacterConfig): Map<AttributeType, Int> =
+        mapOf(
             AttributeType.STR to character.str,
             AttributeType.AGI to character.agi,
             AttributeType.STA to character.sta,
             AttributeType.ENE to character.ene,
-            AttributeType.CMD to character.cmd
+            AttributeType.CMD to character.cmd,
         )
-    }
 
-    private fun windowPrefix(name: String): String {
-        return "GlobalMuOnline - Powered by IGCN - Name: [$name]"
-    }
+    private fun windowPrefix(name: String): String = "GlobalMuOnline - Powered by IGCN - Name: [$name]"
 
     private fun waitForUserIdle(onLog: (LogEntry) -> Unit): Boolean {
         var notified = false
@@ -507,7 +518,7 @@ class BotController(
         character: CharacterConfig,
         hasWindows: Boolean,
         onLog: (LogEntry) -> Unit,
-        onStatus: (String, Boolean) -> Unit
+        onStatus: (String, Boolean) -> Unit,
     ) {
         onStatus(character.name, hasWindows)
         if (!hasWindows) {
@@ -515,9 +526,10 @@ class BotController(
         }
     }
 
-    private fun normalizeSeconds(value: Int, defaultValue: Int): Int {
-        return if (value > 0) value else defaultValue
-    }
+    private fun normalizeSeconds(
+        value: Int,
+        defaultValue: Int,
+    ): Int = if (value > 0) value else defaultValue
 
     private companion object {
         private const val RESET_LEVEL = 400
@@ -536,15 +548,17 @@ class BotController(
         private const val SWITCH_TOGGLE_DELAY_MS = 900L
         private const val DEBUG_CURSOR_POLL_MS = 5_000L
         private const val OVERFLOW_CAP = 32_600
-        private val TITLE_REGEX = Regex(
-            """Name:\s*\[(.+?)]\s*Level:\s*\[(\d+)]\s*Master Level:\s*\[(\d+)]\s*Resets:\s*\[(\d+)]"""
-        )
-        private val ATTRIBUTE_COMMANDS = listOf(
-            AttributeType.STR to "/addstr",
-            AttributeType.AGI to "/addagi",
-            AttributeType.STA to "/addvit",
-            AttributeType.ENE to "/addene",
-            AttributeType.CMD to "/addcmd"
-        )
+        private val TITLE_REGEX =
+            Regex(
+                """Name:\s*\[(.+?)]\s*Level:\s*\[(\d+)]\s*Master Level:\s*\[(\d+)]\s*Resets:\s*\[(\d+)]""",
+            )
+        private val ATTRIBUTE_COMMANDS =
+            listOf(
+                AttributeType.STR to "/addstr",
+                AttributeType.AGI to "/addagi",
+                AttributeType.STA to "/addvit",
+                AttributeType.ENE to "/addene",
+                AttributeType.CMD to "/addcmd",
+            )
     }
 }

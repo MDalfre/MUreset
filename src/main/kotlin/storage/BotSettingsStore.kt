@@ -8,14 +8,15 @@ import java.nio.file.Paths
 data class BotSettings(
     val checkIntervalSeconds: Int,
     val teleportWaitSeconds: Int,
-    val cpuSavingMode: Boolean
+    val cpuSavingMode: Boolean,
 )
 
 object BotSettingsStore {
-    private val filePath: Path = Paths.get(
-        System.getProperty("user.home"),
-        "mureset-settings.cfg"
-    )
+    private val filePath: Path =
+        Paths.get(
+            System.getProperty("user.home"),
+            "mureset-settings.cfg",
+        )
     private const val DEFAULT_CHECK_INTERVAL = 60
     private const val DEFAULT_TELEPORT_WAIT = 30
     private const val DEFAULT_CPU_SAVING = false

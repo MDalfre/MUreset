@@ -48,7 +48,10 @@ class WindowActions {
         BotInputTracker.markBotInput()
     }
 
-    fun clickAt(x: Int, y: Int) {
+    fun clickAt(
+        x: Int,
+        y: Int,
+    ) {
         robot.mouseMove(x, y)
         robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)
         robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)
@@ -73,12 +76,13 @@ class WindowActions {
         val windowHeight = windowRect.bottom - windowRect.top
         val border = ((windowWidth - width) / 2).coerceAtLeast(0)
         val titleBar = (windowHeight - height - border).coerceAtLeast(0)
-        val captureRect = Rectangle(
-            windowRect.left + border,
-            windowRect.top + titleBar,
-            width,
-            height
-        )
+        val captureRect =
+            Rectangle(
+                windowRect.left + border,
+                windowRect.top + titleBar,
+                width,
+                height,
+            )
         return robot.createScreenCapture(captureRect)
     }
 
@@ -159,8 +163,8 @@ class WindowActions {
         }
     }
 
-    private fun resolveKeyCode(char: Char): Int {
-        return when (char) {
+    private fun resolveKeyCode(char: Char): Int =
+        when (char) {
             '/' -> KeyEvent.VK_SLASH
             ' ' -> KeyEvent.VK_SPACE
             '-' -> KeyEvent.VK_MINUS
@@ -172,5 +176,4 @@ class WindowActions {
             '=' -> KeyEvent.VK_EQUALS
             else -> KeyEvent.getExtendedKeyCodeForChar(char.code)
         }
-    }
 }

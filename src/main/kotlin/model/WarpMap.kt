@@ -1,8 +1,12 @@
 package io.github.mdalfre.model
 
-enum class WarpMap(val label: String, val templateResource: String) {
+enum class WarpMap(
+    val label: String,
+    val templateResource: String,
+) {
     ELBELAND_2("Elbeland 2", "/elbeland2_template.png"),
-    ELBELAND_3("Elbeland 3", "/elbeland3_template.png");
+    ELBELAND_3("Elbeland 3", "/elbeland3_template.png"),
+    ;
 
     companion object {
         fun fromLabel(label: String?): WarpMap? {

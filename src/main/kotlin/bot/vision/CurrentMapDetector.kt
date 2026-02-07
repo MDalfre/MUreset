@@ -1,12 +1,12 @@
 package io.github.mdalfre.bot.vision
 
-import org.bytedeco.opencv.opencv_core.Mat
 import io.github.mdalfre.bot.OpenCVBootstrap
 import io.github.mdalfre.bot.windows.WindowActions
 import io.github.mdalfre.bot.windows.WindowInfo
+import org.bytedeco.opencv.opencv_core.Mat
 
 class CurrentMapDetector(
-    private val windowActions: WindowActions = WindowActions()
+    private val windowActions: WindowActions = WindowActions(),
 ) {
     private val elbelandTemplate: Mat? = VisionUtils.loadTemplate("/current_map_elbeland.png")
 
