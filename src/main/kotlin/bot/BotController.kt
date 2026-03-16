@@ -228,7 +228,9 @@ class BotController(
         onStats: (String, CharacterStats) -> Unit,
     ): Boolean {
         questDialogCloser.closeIfPresent(window, onLog)
-        performResetRoutine(window, character, stats, onLog)
+        if(!performResetRoutine(window, character, stats, onLog)){
+            return true
+        }
         if (!runSoloLeveling(window, character, onLog, onStats)) {
             return false
         }
@@ -327,11 +329,11 @@ class BotController(
         character: CharacterConfig,
         stats: CharacterStats,
         onLog: (LogEntry) -> Unit,
-    ) {
+    ): Boolean {
         val totalPoints = (stats.resets + 1) * character.pointsPerReset
         if (totalPoints <= 0) {
             onLog(attentionLog("Invalid total points for ${character.name}"))
-            return
+            return false
         }
         val basePoints = basePoints(character)
         val overflowAttr = character.overflowAttribute
@@ -342,7 +344,7 @@ class BotController(
         var overflowPoints = totalPoints - usedPoints
         if (overflowPoints < 0) {
             onLog(attentionLog("Configured points exceed available total for ${character.name}"))
-            return
+            return false
         }
         if (overflowPoints > OVERFLOW_CAP) {
             val remaining = overflowPoints - OVERFLOW_CAP
@@ -353,6 +355,11 @@ class BotController(
         windowActions.focus(window)
         windowActions.sendCommand("/reset")
         Thread.sleep(2000)
+        if (!currentMapDetector.isLorencia(window)) {
+            onLog(importantLog("${character.name} is not in Lorencia. Maybe is out of Zen !"))
+            onLog(attentionLog("Reset not executed for ${character.name}"))
+            return false
+        }
         onLog(importantLog("Reset executed for ${character.name}."))
 
         val commands =
@@ -371,6 +378,8 @@ class BotController(
             windowActions.sendCommand(command)
             Thread.sleep(COMMAND_DELAY_MS)
         }
+
+        return true
     }
 
     private fun runSoloLeveling(
@@ -421,11 +430,11 @@ class BotController(
         desiredActive: Boolean,
         onLog: (LogEntry) -> Unit,
     ) {
+        windowActions.focus(window)
         val currentActive = switchModeDetector.isSwitchActive(window)
         if (currentActive == desiredActive) {
             return
         }
-        windowActions.focus(window)
         windowActions.sendCtrlKey(KeyEvent.VK_F)
         Thread.sleep(SWITCH_TOGGLE_DELAY_MS)
         val updated = switchModeDetector.isSwitchActive(window)

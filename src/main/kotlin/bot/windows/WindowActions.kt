@@ -42,7 +42,9 @@ class WindowActions {
 
     fun sendCtrlKey(keyCode: Int) {
         robot.keyPress(KeyEvent.VK_CONTROL)
+        Thread.sleep(80)
         robot.keyPress(keyCode)
+        Thread.sleep(80)
         robot.keyRelease(keyCode)
         robot.keyRelease(KeyEvent.VK_CONTROL)
         BotInputTracker.markBotInput()
