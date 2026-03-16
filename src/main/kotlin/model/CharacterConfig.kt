@@ -11,5 +11,5 @@ data class CharacterConfig(
     val pointsPerReset: Int,
     val overflowAttribute: AttributeType,
     val soloLevel: Int,
-    val active: Boolean = true
+    val active: Boolean = true,
 )

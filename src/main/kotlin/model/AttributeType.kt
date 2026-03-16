@@ -5,5 +5,5 @@ enum class AttributeType {
     AGI,
     STA,
     ENE,
-    CMD
+    CMD,
 }

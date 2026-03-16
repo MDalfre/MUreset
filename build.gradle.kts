@@ -4,10 +4,12 @@ plugins {
     kotlin("jvm") version "2.0.21"
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
     id("org.jetbrains.compose") version "1.6.11"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("io.gitlab.arturbosch.detekt") version "1.23.7"
 }
 
 group = "io.github.mdalfre"
-version = "1.0.7"
+version = "1.0.9"
 
 repositories {
     mavenCentral()
@@ -36,6 +38,18 @@ kotlin {
     jvmToolchain(17)
 }
 
+ktlint {
+    version.set("1.3.1")
+}
+
+detekt {
+    toolVersion = "1.23.7"
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(files("config/detekt/detekt.yml"))
+    basePath = projectDir.absolutePath
+}
+
 compose.desktop {
     application {
         mainClass = "io.github.mdalfre.MainKt"
@@ -47,9 +61,9 @@ compose.desktop {
                 console = false
                 menuGroup = "MUreset"
                 modules(
-                    "jdk.unsupported"
+                    "jdk.unsupported",
                 )
-               iconFile.set(project.file("src/main/resources/mu-icon.ico"))
+                iconFile.set(project.file("src/main/resources/mu-icon.ico"))
             }
         }
     }

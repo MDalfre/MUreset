@@ -1,17 +1,17 @@
 package io.github.mdalfre.bot.vision
 
-import java.awt.image.BufferedImage
+import io.github.mdalfre.bot.OpenCVBootstrap
+import io.github.mdalfre.bot.windows.WindowActions
+import io.github.mdalfre.bot.windows.WindowInfo
 import org.bytedeco.opencv.global.opencv_core
 import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.Mat
 import org.bytedeco.opencv.opencv_core.Point
 import org.bytedeco.opencv.opencv_core.Rect
-import io.github.mdalfre.bot.OpenCVBootstrap
-import io.github.mdalfre.bot.windows.WindowActions
-import io.github.mdalfre.bot.windows.WindowInfo
+import java.awt.image.BufferedImage
 
 class PartyInteractor(
-    private val windowActions: WindowActions = WindowActions()
+    private val windowActions: WindowActions = WindowActions(),
 ) {
     private val okTemplate: Mat? = VisionUtils.loadTemplate("/ok_dialog_template.png")
 
@@ -40,7 +40,7 @@ class PartyInteractor(
 
     private fun pickRandomPartySlotClick(
         image: BufferedImage,
-        triedSlots: Set<Int>
+        triedSlots: Set<Int>,
     ): Triple<Int, Int, Int>? {
         val availableSlots = PARTY_SLOT_POINTS.indices.filterNot { triedSlots.contains(it) }
         if (availableSlots.isEmpty()) {
@@ -54,12 +54,13 @@ class PartyInteractor(
     private fun findOkButtonClick(image: BufferedImage): Pair<Int, Int>? {
         val width = image.width
         val height = image.height
-        val region = Rect(
-            (width * OK_REGION_X).toInt(),
-            (height * OK_REGION_Y).toInt(),
-            (width * OK_REGION_W).toInt(),
-            (height * OK_REGION_H).toInt()
-        )
+        val region =
+            Rect(
+                (width * OK_REGION_X).toInt(),
+                (height * OK_REGION_Y).toInt(),
+                (width * OK_REGION_W).toInt(),
+                (height * OK_REGION_H).toInt(),
+            )
         val template = okTemplate ?: return null
         val bgr = VisionUtils.toBgrMat(image)
         val roi = Mat(bgr, region)
@@ -83,15 +84,15 @@ class PartyInteractor(
         return clickX to clickY
     }
 
-
     private companion object {
-        private val PARTY_SLOT_POINTS = listOf(
-            957 to 158,
-            957 to 218,
-            957 to 278,
-            957 to 338,
-            957 to 398
-        )
+        private val PARTY_SLOT_POINTS =
+            listOf(
+                957 to 158,
+                957 to 218,
+                957 to 278,
+                957 to 338,
+                957 to 398,
+            )
         private const val OK_REGION_X = 0.35
         private const val OK_REGION_Y = 0.45
         private const val OK_REGION_W = 0.3

@@ -3,14 +3,14 @@ package io.github.mdalfre.composable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
-import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SettingsBar(
@@ -18,12 +18,12 @@ fun SettingsBar(
     onCheckIntervalChange: (String) -> Unit,
     onTeleportWaitChange: (String) -> Unit,
     onCpuSavingModeChange: (Boolean) -> Unit,
-    onToggleForm: () -> Unit
+    onToggleForm: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         StyledTextField(
             label = "Check interval (s)",
@@ -31,7 +31,7 @@ fun SettingsBar(
             onValueChange = onCheckIntervalChange,
             modifier = Modifier.weight(1f),
             inputModifier = Modifier.fillMaxWidth(),
-            enabled = !state.isRunning
+            enabled = !state.isRunning,
         )
         StyledTextField(
             label = "Teleport wait time (s)",
@@ -39,27 +39,27 @@ fun SettingsBar(
             onValueChange = onTeleportWaitChange,
             modifier = Modifier.weight(1f),
             inputModifier = Modifier.fillMaxWidth(),
-            enabled = !state.isRunning
+            enabled = !state.isRunning,
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Checkbox(
                 checked = state.cpuSavingMode,
                 onCheckedChange = { onCpuSavingModeChange(it) },
-                enabled = !state.isRunning
+                enabled = !state.isRunning,
             )
             Text(
                 text = "CPU Saving Mode",
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
         }
         StyledButton(
             text = if (state.showForm) "Hide form" else "Add character",
             onClick = onToggleForm,
             enabled = !state.isRunning,
-            colors = ButtonDefaults.buttonColors()
+            colors = ButtonDefaults.buttonColors(),
         )
     }
 }

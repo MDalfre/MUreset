@@ -1,17 +1,20 @@
 package io.github.mdalfre.bot.vision
 
-import org.bytedeco.opencv.opencv_core.Mat
 import io.github.mdalfre.bot.windows.WindowActions
 import io.github.mdalfre.bot.windows.WindowInfo
 import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.LogType
+import org.bytedeco.opencv.opencv_core.Mat
 
 class QuestDialogCloser(
-    private val windowActions: WindowActions = WindowActions()
+    private val windowActions: WindowActions = WindowActions(),
 ) {
     private val questTemplate: Mat? = VisionUtils.loadTemplate("/quest_dialog_template.png")
 
-    fun closeIfPresent(window: WindowInfo, onLog: (LogEntry) -> Unit = {}) {
+    fun closeIfPresent(
+        window: WindowInfo,
+        onLog: (LogEntry) -> Unit = {},
+    ) {
         val template = questTemplate ?: return
         val screenshot = windowActions.captureWindow(window)
         val bgr = VisionUtils.toBgrMat(screenshot)

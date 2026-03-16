@@ -1,11 +1,11 @@
 package io.github.mdalfre.bot
 
-import java.awt.image.BufferedImage
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import io.github.mdalfre.model.CharacterConfig
 import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
+import java.awt.image.BufferedImage
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 object BotRuntimeState {
     @Volatile
@@ -36,7 +36,10 @@ object BotRuntimeState {
         }
     }
 
-    fun setStats(name: String, stats: CharacterStats) {
+    fun setStats(
+        name: String,
+        stats: CharacterStats,
+    ) {
         statsByName[name] = stats
     }
 
@@ -49,7 +52,10 @@ object BotRuntimeState {
 
     fun getCharacters(): List<CharacterConfig> = characters.toList()
 
-    fun setScreenshot(name: String, image: BufferedImage) {
+    fun setScreenshot(
+        name: String,
+        image: BufferedImage,
+    ) {
         screenshots[name] = image
     }
 

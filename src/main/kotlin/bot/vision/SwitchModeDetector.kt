@@ -6,7 +6,7 @@ import io.github.mdalfre.bot.windows.WindowInfo
 import org.bytedeco.opencv.opencv_core.Mat
 
 class SwitchModeDetector(
-    private val windowActions: WindowActions = WindowActions()
+    private val windowActions: WindowActions = WindowActions(),
 ) {
     private val switchTemplate: Mat? = VisionUtils.loadTemplate("/switch_mode_template.png")
 
@@ -17,8 +17,9 @@ class SwitchModeDetector(
         OpenCVBootstrap.init()
         val screenshot = windowActions.captureClientArea(window)
         val bgr = VisionUtils.toBgrMat(screenshot)
-        val match = VisionUtils.matchLocationMultiScale(bgr, switchTemplate, TEMPLATE_SCALES)
-            ?: return false
+        val match =
+            VisionUtils.matchLocationMultiScale(bgr, switchTemplate, TEMPLATE_SCALES)
+                ?: return false
         return match.score >= SWITCH_THRESHOLD
     }
 

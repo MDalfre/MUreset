@@ -1,0 +1,70 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+
+processors:
+  active: true
+  exclude:
+    - 'build/**'
+    - 'out/**'
+
+console-reports:
+  active: true
+
+output-reports:
+  active: true
+
+style:
+  WildcardImport:
+    active: false
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    active: false
+  FunctionOnlyReturningConstant:
+    active: false
+  UnusedParameter:
+    active: false
+  UnusedPrivateMember:
+    active: false
+  LoopWithTooManyJumpStatements:
+    active: false
+
+complexity:
+  LongMethod:
+    active: false
+  LongParameterList:
+    active: false
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+
+empty-blocks:
+  active: false
+
+exceptions:
+  active: false
+
+coroutines:
+  active: false
+
+potential-bugs:
+  active: true
+
+comments:
+  active: false
+
+naming:
+  active: true
+  FunctionNaming:
+    active: false
+  InvalidPackageDeclaration:
+    active: false
+
+performance:
+  active: true
