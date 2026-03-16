@@ -8,8 +8,9 @@ import io.github.mdalfre.model.LogEntry
 data class SettingsState(
     val checkIntervalSeconds: String,
     val teleportWaitSeconds: String,
+    val cpuSavingMode: Boolean,
     val showForm: Boolean,
-    val isRunning: Boolean
+    val isRunning: Boolean,
 )
 
 data class CharacterFormState(
@@ -26,7 +27,7 @@ data class CharacterFormState(
     val errorMessage: String?,
     val isRunning: Boolean,
     val canSubmit: Boolean,
-    val showCancel: Boolean
+    val showCancel: Boolean,
 )
 
 data class CharacterListState(
@@ -35,9 +36,9 @@ data class CharacterListState(
     val statusByName: Map<String, Boolean>,
     val activeName: String?,
     val editingIndex: Int?,
-    val isRunning: Boolean
+    val isRunning: Boolean,
 )
 
 data class LogsState(
-    val logs: List<LogEntry>
+    val logs: List<LogEntry>,
 )

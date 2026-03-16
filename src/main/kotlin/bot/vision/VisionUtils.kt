@@ -1,15 +1,15 @@
 package io.github.mdalfre.bot.vision
 
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
-import kotlin.math.max
-import kotlin.math.min
 import org.bytedeco.opencv.global.opencv_core
 import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.Mat
 import org.bytedeco.opencv.opencv_core.Point
 import org.bytedeco.opencv.opencv_core.Rect
 import org.bytedeco.opencv.opencv_core.Size
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
+import kotlin.math.max
+import kotlin.math.min
 
 object VisionUtils {
     fun loadTemplate(resource: String): Mat? {
@@ -35,7 +35,7 @@ object VisionUtils {
         xRatio: Double,
         yRatio: Double,
         wRatio: Double,
-        hRatio: Double
+        hRatio: Double,
     ): Rect {
         val width = image.cols()
         val height = image.rows()
@@ -50,11 +50,16 @@ object VisionUtils {
         return Rect(safeX, safeY, safeW, safeH)
     }
 
-    fun matchTemplateScore(region: Mat, template: Mat): Double {
-        return matchTemplate(region, template)?.score ?: -1.0
-    }
+    fun matchTemplateScore(
+        region: Mat,
+        template: Mat,
+    ): Double = matchTemplate(region, template)?.score ?: -1.0
 
-    fun matchLocationMultiScale(region: Mat, template: Mat, scales: DoubleArray): TemplateMatch? {
+    fun matchLocationMultiScale(
+        region: Mat,
+        template: Mat,
+        scales: DoubleArray,
+    ): TemplateMatch? {
         var bestMatch: TemplateMatch? = null
         for (scale in scales) {
             val scaled = Mat()
@@ -72,7 +77,10 @@ object VisionUtils {
         return bestMatch
     }
 
-    private fun matchTemplate(region: Mat, template: Mat): TemplateMatch? {
+    private fun matchTemplate(
+        region: Mat,
+        template: Mat,
+    ): TemplateMatch? {
         val resultCols = region.cols() - template.cols() + 1
         val resultRows = region.rows() - template.rows() + 1
         if (resultCols <= 0 || resultRows <= 0) {
@@ -91,6 +99,6 @@ object VisionUtils {
     data class TemplateMatch(
         val point: Point,
         val scale: Double,
-        val score: Double
+        val score: Double,
     )
 }

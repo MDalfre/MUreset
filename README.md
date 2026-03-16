@@ -74,4 +74,5 @@ Typical output:
 
 ## Notes
 - The bot uses `Robot` for mouse/keyboard. Avoid using the PC while it runs.
+- The EN keyboard layout is required. `sendText` depends on the active Windows keyboard layout, and using layouts like PT-BR can trigger `Invalid key code` in `Robot`.
 - If the game window title changes, update `BotController.windowPrefix`.

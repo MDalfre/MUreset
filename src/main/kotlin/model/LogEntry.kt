@@ -3,10 +3,10 @@ package io.github.mdalfre.model
 enum class LogType {
     INFO,
     IMPORTANT,
-    ATTENTION
+    ATTENTION,
 }
 
 data class LogEntry(
     val message: String,
-    val type: LogType
+    val type: LogType,
 )

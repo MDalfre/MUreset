@@ -7,15 +7,16 @@ import com.sun.jna.platform.win32.WinUser
 class WindowFinder {
     fun findWindowsByPrefix(prefix: String): List<WindowInfo> {
         val results = mutableListOf<WindowInfo>()
-        val callback = WinUser.WNDENUMPROC { hWnd, _ ->
-            val title = getWindowTitle(hWnd)
-            if (title.startsWith(prefix)) {
-                val rect = WinDef.RECT()
-                User32.INSTANCE.GetWindowRect(hWnd, rect)
-                results.add(WindowInfo(hWnd, title, rect))
+        val callback =
+            WinUser.WNDENUMPROC { hWnd, _ ->
+                val title = getWindowTitle(hWnd)
+                if (title.startsWith(prefix)) {
+                    val rect = WinDef.RECT()
+                    User32.INSTANCE.GetWindowRect(hWnd, rect)
+                    results.add(WindowInfo(hWnd, title, rect))
+                }
+                true
             }
-            true
-        }
         User32.INSTANCE.EnumWindows(callback, null)
         return results
     }

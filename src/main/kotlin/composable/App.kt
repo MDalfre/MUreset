@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -24,9 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
@@ -36,22 +37,21 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.mdalfre.bot.BotController
+import io.github.mdalfre.bot.BotDebugConfig
+import io.github.mdalfre.bot.BotRuntimeState
 import io.github.mdalfre.model.AttributeType
 import io.github.mdalfre.model.CharacterConfig
 import io.github.mdalfre.model.CharacterStats
 import io.github.mdalfre.model.LogEntry
-import io.github.mdalfre.model.WarpMap
-import io.github.mdalfre.bot.BotDebugConfig
-import io.github.mdalfre.bot.BotRuntimeState
 import io.github.mdalfre.model.LogType
-import io.github.mdalfre.web.WebServer
+import io.github.mdalfre.model.WarpMap
 import io.github.mdalfre.storage.BotSettings
 import io.github.mdalfre.storage.BotSettingsStore
 import io.github.mdalfre.storage.CharacterConfigStore
+import io.github.mdalfre.web.WebServer
 import java.awt.EventQueue
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -59,67 +59,74 @@ import java.net.NetworkInterface
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
-    val scheme = darkColorScheme(
-        background = Color(0xFF0C0A08),
-        surface = Color(0xFF15110C),
-        primary = Color(0xFFC8A24A),
-        onPrimary = Color(0xFF1A1307),
-        secondary = Color(0xFF7E6533),
-        tertiary = Color(0xFF3F5A3B),
-        onSurface = Color(0xFFF2EAD3),
-        onBackground = Color(0xFFEFE6CF)
-    )
-    val typography = Typography().run {
-        copy(
-            displayLarge = displayLarge.copy(fontFamily = FontFamily.Cursive),
-            displayMedium = displayMedium.copy(fontFamily = FontFamily.Cursive),
-            displaySmall = displaySmall.copy(fontFamily = FontFamily.Cursive),
-            headlineLarge = headlineLarge.copy(fontFamily = FontFamily.Serif),
-            headlineMedium = headlineMedium.copy(fontFamily = FontFamily.Serif),
-            headlineSmall = headlineSmall.copy(fontFamily = FontFamily.Serif),
-            titleLarge = titleLarge.copy(fontFamily = FontFamily.Serif),
-            titleMedium = titleMedium.copy(fontFamily = FontFamily.Serif),
-            titleSmall = titleSmall.copy(fontFamily = FontFamily.Serif),
-            bodyLarge = bodyLarge.copy(fontFamily = FontFamily.Monospace),
-            bodyMedium = bodyMedium.copy(fontFamily = FontFamily.Monospace),
-            bodySmall = bodySmall.copy(fontFamily = FontFamily.Monospace),
-            labelLarge = labelLarge.copy(fontFamily = FontFamily.Monospace),
-            labelMedium = labelMedium.copy(fontFamily = FontFamily.Monospace),
-            labelSmall = labelSmall.copy(fontFamily = FontFamily.Monospace)
+    val scheme =
+        darkColorScheme(
+            background = Color(0xFF0C0A08),
+            surface = Color(0xFF15110C),
+            primary = Color(0xFFC8A24A),
+            onPrimary = Color(0xFF1A1307),
+            secondary = Color(0xFF7E6533),
+            tertiary = Color(0xFF3F5A3B),
+            onSurface = Color(0xFFF2EAD3),
+            onBackground = Color(0xFFEFE6CF),
         )
-    }
-    val shapes = Shapes(
-        extraSmall = RoundedCornerShape(6.dp),
-        small = RoundedCornerShape(8.dp),
-        medium = RoundedCornerShape(10.dp),
-        large = RoundedCornerShape(12.dp)
-    )
-    val backgroundBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF080705),
-            Color(0xFF15100B),
-            Color(0xFF0D1411)
-        ),
-        start = Offset(0f, 0f),
-        end = Offset(1200f, 900f)
-    )
+    val typography =
+        Typography().run {
+            copy(
+                displayLarge = displayLarge.copy(fontFamily = FontFamily.Cursive),
+                displayMedium = displayMedium.copy(fontFamily = FontFamily.Cursive),
+                displaySmall = displaySmall.copy(fontFamily = FontFamily.Cursive),
+                headlineLarge = headlineLarge.copy(fontFamily = FontFamily.Serif),
+                headlineMedium = headlineMedium.copy(fontFamily = FontFamily.Serif),
+                headlineSmall = headlineSmall.copy(fontFamily = FontFamily.Serif),
+                titleLarge = titleLarge.copy(fontFamily = FontFamily.Serif),
+                titleMedium = titleMedium.copy(fontFamily = FontFamily.Serif),
+                titleSmall = titleSmall.copy(fontFamily = FontFamily.Serif),
+                bodyLarge = bodyLarge.copy(fontFamily = FontFamily.Monospace),
+                bodyMedium = bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                bodySmall = bodySmall.copy(fontFamily = FontFamily.Monospace),
+                labelLarge = labelLarge.copy(fontFamily = FontFamily.Monospace),
+                labelMedium = labelMedium.copy(fontFamily = FontFamily.Monospace),
+                labelSmall = labelSmall.copy(fontFamily = FontFamily.Monospace),
+            )
+        }
+    val shapes =
+        Shapes(
+            extraSmall = RoundedCornerShape(6.dp),
+            small = RoundedCornerShape(8.dp),
+            medium = RoundedCornerShape(10.dp),
+            large = RoundedCornerShape(12.dp),
+        )
+    val backgroundBrush =
+        Brush.linearGradient(
+            colors =
+                listOf(
+                    Color(0xFF080705),
+                    Color(0xFF15100B),
+                    Color(0xFF0D1411),
+                ),
+            start = Offset(0f, 0f),
+            end = Offset(1200f, 900f),
+        )
 
     MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
         Surface(modifier = Modifier.fillMaxSize()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(backgroundBrush)
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(backgroundBrush)
+                        .padding(24.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 val botController = remember { BotController() }
                 remember { WebServer.start() }
-                val characters = remember {
-                    mutableStateListOf<CharacterConfig>().apply {
-                        addAll(CharacterConfigStore.load())
+                val characters =
+                    remember {
+                        mutableStateListOf<CharacterConfig>().apply {
+                            addAll(CharacterConfigStore.load())
+                        }
                     }
-                }
                 BotRuntimeState.setCharacters(characters.toList())
                 val statsByName = remember { mutableStateMapOf<String, CharacterStats>() }
                 val statusByName = remember { mutableStateMapOf<String, Boolean>() }
@@ -147,6 +154,7 @@ fun App() {
                 val savedSettings = remember { BotSettingsStore.load() }
                 var checkIntervalSeconds by remember { mutableStateOf(savedSettings.checkIntervalSeconds.toString()) }
                 var teleportWaitSeconds by remember { mutableStateOf(savedSettings.teleportWaitSeconds.toString()) }
+                var cpuSavingMode by remember { mutableStateOf(savedSettings.cpuSavingMode) }
                 var showForm by remember { mutableStateOf(false) }
 
                 fun resetForm(clearError: Boolean = true) {
@@ -166,7 +174,10 @@ fun App() {
                     editingIndex = null
                 }
 
-                fun fillForm(character: CharacterConfig, index: Int) {
+                fun fillForm(
+                    character: CharacterConfig,
+                    index: Int,
+                ) {
                     errorMessage = null
                     name = character.name
                     str = character.str.toString()
@@ -210,13 +221,14 @@ fun App() {
                 val addFocus = remember { FocusRequester() }
 
                 fun pushLog(entry: LogEntry) {
-                    val decorated = LogEntry(
-                        message = "${timestampPrefix()} ${entry.message}",
-                        type = entry.type
-                    )
+                    val decorated =
+                        LogEntry(
+                            message = "${timestampPrefix()} ${entry.message}",
+                            type = entry.type,
+                        )
                     EventQueue.invokeLater {
                         logs.add(
-                            decorated
+                            decorated,
                         )
                         if (logs.size > 200) {
                             logs.removeRange(0, logs.size - 200)
@@ -236,7 +248,9 @@ fun App() {
 
                 Column(
                     modifier = Modifier.width(1100.dp),
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                    verticalArrangement =
+                        androidx.compose.foundation.layout.Arrangement
+                            .spacedBy(16.dp),
                 ) {
                     RunningBanner(isRunning = isRunning)
 
@@ -266,6 +280,7 @@ fun App() {
                                     },
                                     checkIntervalSeconds = checkIntervalSeconds.toIntOrNull() ?: 60,
                                     teleportWaitSeconds = teleportWaitSeconds.toIntOrNull() ?: 30,
+                                    cpuSavingMode = cpuSavingMode,
                                     onComplete = {
                                         EventQueue.invokeLater {
                                             isRunning = false
@@ -273,70 +288,81 @@ fun App() {
                                         }
                                         BotRuntimeState.isRunning = false
                                         BotRuntimeState.activeName = null
-                                    }
+                                    },
                                 )
                                 BotRuntimeState.isRunning = true
                             }
-                        }
+                        },
                     )
 
                     SettingsBar(
-                        state = SettingsState(
-                            checkIntervalSeconds = checkIntervalSeconds,
-                            teleportWaitSeconds = teleportWaitSeconds,
-                            showForm = showForm,
-                            isRunning = isRunning
-                        ),
+                        state =
+                            SettingsState(
+                                checkIntervalSeconds = checkIntervalSeconds,
+                                teleportWaitSeconds = teleportWaitSeconds,
+                                cpuSavingMode = cpuSavingMode,
+                                showForm = showForm,
+                                isRunning = isRunning,
+                            ),
                         onCheckIntervalChange = { value ->
                             checkIntervalSeconds = digitsOnly(value)
                             val check = checkIntervalSeconds.toIntOrNull() ?: 60
                             val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
-                            BotSettingsStore.save(BotSettings(check, teleport))
+                            BotSettingsStore.save(BotSettings(check, teleport, cpuSavingMode))
                         },
                         onTeleportWaitChange = { value ->
                             teleportWaitSeconds = digitsOnly(value)
                             val check = checkIntervalSeconds.toIntOrNull() ?: 60
                             val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
-                            BotSettingsStore.save(BotSettings(check, teleport))
+                            BotSettingsStore.save(BotSettings(check, teleport, cpuSavingMode))
                         },
-                        onToggleForm = { showForm = !showForm }
+                        onCpuSavingModeChange = { enabled ->
+                            cpuSavingMode = enabled
+                            val check = checkIntervalSeconds.toIntOrNull() ?: 60
+                            val teleport = teleportWaitSeconds.toIntOrNull() ?: 30
+                            BotSettingsStore.save(BotSettings(check, teleport, cpuSavingMode))
+                        },
+                        onToggleForm = { showForm = !showForm },
                     )
                     if (BotDebugConfig.ENABLED) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                            horizontalArrangement =
+                                androidx.compose.foundation.layout.Arrangement
+                                    .spacedBy(12.dp),
                         ) {
                             StyledButton(
                                 text = "Log cursor (focused window)",
                                 onClick = { botController.logFocusedCursor { entry -> pushLog(entry) } },
-                                enabled = true
+                                enabled = true,
                             )
                             StyledButton(
                                 text = "Stop logging",
                                 onClick = { botController.stopFocusedCursorLogging { entry -> pushLog(entry) } },
-                                enabled = true
+                                enabled = true,
                             )
                         }
                     }
 
                     if (showForm) {
                         CharacterFormCard(
-                            state = CharacterFormState(
-                                name = name,
-                                str = str,
-                                agi = agi,
-                                sta = sta,
-                                ene = ene,
-                                cmd = cmd,
-                                pointsPerReset = pointsPerReset,
-                                soloLevel = soloLevel,
-                                warpMapLabel = warpMap.label,
-                                overflowAttribute = overflowAttribute,
-                                errorMessage = errorMessage,
-                                isRunning = isRunning,
-                                canSubmit = canAdd,
-                                showCancel = editingIndex != null
-                            ),
+                            state =
+                                CharacterFormState(
+                                    name = name,
+                                    str = str,
+                                    agi = agi,
+                                    sta = sta,
+                                    ene = ene,
+                                    cmd = cmd,
+                                    pointsPerReset = pointsPerReset,
+                                    soloLevel = soloLevel,
+                                    warpMapLabel = warpMap.label,
+                                    overflowAttribute = overflowAttribute,
+                                    errorMessage = errorMessage,
+                                    isRunning = isRunning,
+                                    canSubmit = canAdd,
+                                    showCancel = editingIndex != null,
+                                ),
                             nameFocus = nameFocus,
                             strFocus = strFocus,
                             agiFocus = agiFocus,
@@ -361,64 +387,70 @@ fun App() {
                             onSubmit = {
                                 errorMessage = null
                                 val overflow = overflowAttribute
-                            if (canAdd && overflow != null) {
-                                val existingActive = editingIndex?.let { index ->
-                                    characters.getOrNull(index)?.active
-                                } ?: true
-                                val updated = CharacterConfig(
-                                        name = name.trim(),
-                                        str = str.toIntOrNull() ?: 0,
-                                        agi = agi.toIntOrNull() ?: 0,
-                                        sta = sta.toIntOrNull() ?: 0,
-                                        ene = ene.toIntOrNull() ?: 0,
-                                        cmd = cmd.toIntOrNull() ?: 0,
-                                        warpMap = warpMap,
-                                        pointsPerReset = pointsValue,
-                                        overflowAttribute = overflow,
-                                        soloLevel = soloLevelValue,
-                                        active = existingActive
-                                    )
+                                if (canAdd && overflow != null) {
+                                    val existingActive =
+                                        editingIndex?.let { index ->
+                                            characters.getOrNull(index)?.active
+                                        } ?: true
+                                    val updated =
+                                        CharacterConfig(
+                                            name = name.trim(),
+                                            str = str.toIntOrNull() ?: 0,
+                                            agi = agi.toIntOrNull() ?: 0,
+                                            sta = sta.toIntOrNull() ?: 0,
+                                            ene = ene.toIntOrNull() ?: 0,
+                                            cmd = cmd.toIntOrNull() ?: 0,
+                                            warpMap = warpMap,
+                                            pointsPerReset = pointsValue,
+                                            overflowAttribute = overflow,
+                                            soloLevel = soloLevelValue,
+                                            active = existingActive,
+                                        )
                                     val normalized = updated.name.lowercase()
-                                    val duplicateIndex = characters.indexOfFirst {
-                                        it.name.trim().lowercase() == normalized
-                                    }
+                                    val duplicateIndex =
+                                        characters.indexOfFirst {
+                                            it.name.trim().lowercase() == normalized
+                                        }
                                     val index = editingIndex
                                     val hasDuplicate = duplicateIndex >= 0 && duplicateIndex != index
                                     if (hasDuplicate) {
                                         errorMessage = "A character with this name already exists."
                                         return@CharacterFormCard
                                     }
-                                if (index == null) {
-                                    characters.add(updated)
-                                    CharacterConfigStore.save(characters)
-                                    BotRuntimeState.setCharacters(characters.toList())
-                                    resetForm(clearError = false)
-                                } else if (index in characters.indices) {
-                                    pendingUpdate = updated
-                                    pendingUpdateIndex = index
-                                    return@CharacterFormCard
+                                    if (index == null) {
+                                        characters.add(updated)
+                                        CharacterConfigStore.save(characters)
+                                        BotRuntimeState.setCharacters(characters.toList())
+                                        resetForm(clearError = false)
+                                    } else if (index in characters.indices) {
+                                        pendingUpdate = updated
+                                        pendingUpdateIndex = index
+                                        return@CharacterFormCard
                                     }
                                 }
                             },
                             onCancel = {
                                 resetForm()
-                            }
+                            },
                         )
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                        horizontalArrangement =
+                            androidx.compose.foundation.layout.Arrangement
+                                .spacedBy(16.dp),
                     ) {
                         CharacterListPane(
-                            state = CharacterListState(
-                                characters = characters,
-                                statsByName = statsByName,
-                                statusByName = statusByName,
-                                activeName = activeName,
-                                editingIndex = editingIndex,
-                                isRunning = isRunning
-                            ),
+                            state =
+                                CharacterListState(
+                                    characters = characters,
+                                    statsByName = statsByName,
+                                    statusByName = statusByName,
+                                    activeName = activeName,
+                                    editingIndex = editingIndex,
+                                    isRunning = isRunning,
+                                ),
                             onClear = { pendingClear = true },
                             onDelete = { pendingDelete = it },
                             onEdit = { character ->
@@ -435,14 +467,14 @@ fun App() {
                                     BotRuntimeState.setCharacters(characters.toList())
                                 }
                             },
-                            modifier = Modifier.weight(1.1f)
+                            modifier = Modifier.weight(1.1f),
                         )
 
                         LogsPane(
                             state = LogsState(logs = logs),
                             logListState = logListState,
                             onClear = { logs.clear() },
-                            modifier = Modifier.weight(0.9f)
+                            modifier = Modifier.weight(0.9f),
                         )
                     }
 
@@ -483,7 +515,7 @@ fun App() {
                             }
                             pendingUpdate = null
                             pendingUpdateIndex = null
-                        }
+                        },
                     )
                 }
             }
@@ -492,10 +524,13 @@ fun App() {
 }
 
 private fun resolveLanUrl(port: Int): String? {
-    val addresses = NetworkInterface.getNetworkInterfaces().toList()
-        .flatMap { it.inetAddresses.toList() }
-        .filterIsInstance<Inet4Address>()
-        .filter { !it.isLoopbackAddress && it.isSiteLocalAddress }
+    val addresses =
+        NetworkInterface
+            .getNetworkInterfaces()
+            .toList()
+            .flatMap { it.inetAddresses.toList() }
+            .filterIsInstance<Inet4Address>()
+            .filter { !it.isLoopbackAddress && it.isSiteLocalAddress }
     val ip = addresses.firstOrNull()?.hostAddress ?: return null
     return "http://$ip:$port"
 }

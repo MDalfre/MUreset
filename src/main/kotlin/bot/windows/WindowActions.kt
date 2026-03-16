@@ -40,7 +40,20 @@ class WindowActions {
         BotInputTracker.markBotInput()
     }
 
-    fun clickAt(x: Int, y: Int) {
+    fun sendCtrlKey(keyCode: Int) {
+        robot.keyPress(KeyEvent.VK_CONTROL)
+        Thread.sleep(80)
+        robot.keyPress(keyCode)
+        Thread.sleep(80)
+        robot.keyRelease(keyCode)
+        robot.keyRelease(KeyEvent.VK_CONTROL)
+        BotInputTracker.markBotInput()
+    }
+
+    fun clickAt(
+        x: Int,
+        y: Int,
+    ) {
         robot.mouseMove(x, y)
         robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)
         robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK)
@@ -65,12 +78,13 @@ class WindowActions {
         val windowHeight = windowRect.bottom - windowRect.top
         val border = ((windowWidth - width) / 2).coerceAtLeast(0)
         val titleBar = (windowHeight - height - border).coerceAtLeast(0)
-        val captureRect = Rectangle(
-            windowRect.left + border,
-            windowRect.top + titleBar,
-            width,
-            height
-        )
+        val captureRect =
+            Rectangle(
+                windowRect.left + border,
+                windowRect.top + titleBar,
+                width,
+                height,
+            )
         return robot.createScreenCapture(captureRect)
     }
 
@@ -135,8 +149,8 @@ class WindowActions {
 
     private fun sendText(text: String) {
         for (char in text) {
-            val keyCode = KeyEvent.getExtendedKeyCodeForChar(char.code)
-            if (keyCode == KeyEvent.VK_UNDEFINED) {
+            val keyCode = resolveKeyCode(char)
+            if (keyCode <= 0) {
                 continue
             }
             val upper = char.isUpperCase()
@@ -150,4 +164,18 @@ class WindowActions {
             }
         }
     }
+
+    private fun resolveKeyCode(char: Char): Int =
+        when (char) {
+            '/' -> KeyEvent.VK_SLASH
+            ' ' -> KeyEvent.VK_SPACE
+            '-' -> KeyEvent.VK_MINUS
+            '_' -> KeyEvent.VK_MINUS
+            '.' -> KeyEvent.VK_PERIOD
+            ',' -> KeyEvent.VK_COMMA
+            ':' -> KeyEvent.VK_SEMICOLON
+            '+' -> KeyEvent.VK_EQUALS
+            '=' -> KeyEvent.VK_EQUALS
+            else -> KeyEvent.getExtendedKeyCodeForChar(char.code)
+        }
 }

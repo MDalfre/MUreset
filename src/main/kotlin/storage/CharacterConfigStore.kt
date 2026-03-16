@@ -1,18 +1,19 @@
 package io.github.mdalfre.storage
 
+import io.github.mdalfre.model.AttributeType
+import io.github.mdalfre.model.CharacterConfig
+import io.github.mdalfre.model.WarpMap
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import io.github.mdalfre.model.AttributeType
-import io.github.mdalfre.model.CharacterConfig
-import io.github.mdalfre.model.WarpMap
 
 object CharacterConfigStore {
-    private val filePath: Path = Paths.get(
-        System.getProperty("user.home"),
-        ".mureset-characters.cfg"
-    )
+    private val filePath: Path =
+        Paths.get(
+            System.getProperty("user.home"),
+            ".mureset-characters.cfg",
+        )
     private const val DEFAULT_SOLO_LEVEL = 30
     private val DEFAULT_WARP_MAP = WarpMap.ELBELAND_3
 
@@ -20,7 +21,8 @@ object CharacterConfigStore {
         if (!Files.exists(filePath)) {
             return emptyList()
         }
-        return Files.readAllLines(filePath, StandardCharsets.UTF_8)
+        return Files
+            .readAllLines(filePath, StandardCharsets.UTF_8)
             .mapNotNull { parseLine(it) }
     }
 
@@ -29,8 +31,8 @@ object CharacterConfigStore {
         Files.write(filePath, lines, StandardCharsets.UTF_8)
     }
 
-    private fun encodeLine(character: CharacterConfig): String {
-        return buildString {
+    private fun encodeLine(character: CharacterConfig): String =
+        buildString {
             append(escape(character.name))
             append("|")
             append(character.str)
@@ -53,7 +55,6 @@ object CharacterConfigStore {
             append("|")
             append(character.warpMap.name)
         }
-    }
 
     private fun parseLine(line: String): CharacterConfig? {
         if (line.isBlank()) {
@@ -65,23 +66,26 @@ object CharacterConfigStore {
         }
         val pointsPerReset = parts.getOrNull(6)?.toIntOrNull() ?: 0
         val overflowAttribute = parts.getOrNull(7)?.let { parseAttribute(it) } ?: AttributeType.STR
-        val active = if (parts.size >= 10) {
-            parseBoolean(parts[8]) ?: true
-        } else {
-            true
-        }
-        val soloLevel = if (parts.size >= 11) {
-            parts.getOrNull(9)?.toIntOrNull() ?: DEFAULT_SOLO_LEVEL
-        } else {
-            DEFAULT_SOLO_LEVEL
-        }
-        val mapsField = when {
-            parts.size >= 11 -> parts[10]
-            parts.size == 10 -> parts[9]
-            parts.size == 9 -> parts[8]
-            parts.size == 8 -> parts[7]
-            else -> parts.getOrNull(6).orEmpty()
-        }
+        val active =
+            if (parts.size >= 10) {
+                parseBoolean(parts[8]) ?: true
+            } else {
+                true
+            }
+        val soloLevel =
+            if (parts.size >= 11) {
+                parts.getOrNull(9)?.toIntOrNull() ?: DEFAULT_SOLO_LEVEL
+            } else {
+                DEFAULT_SOLO_LEVEL
+            }
+        val mapsField =
+            when {
+                parts.size >= 11 -> parts[10]
+                parts.size == 10 -> parts[9]
+                parts.size == 9 -> parts[8]
+                parts.size == 8 -> parts[7]
+                else -> parts.getOrNull(6).orEmpty()
+            }
         val warpMap = parseWarpMap(mapsField) ?: DEFAULT_WARP_MAP
         return CharacterConfig(
             name = unescape(parts[0]),
@@ -94,7 +98,7 @@ object CharacterConfigStore {
             pointsPerReset = pointsPerReset,
             overflowAttribute = overflowAttribute,
             soloLevel = soloLevel,
-            active = active
+            active = active,
         )
     }
 
@@ -103,12 +107,11 @@ object CharacterConfigStore {
         return runCatching { AttributeType.valueOf(trimmed.uppercase()) }.getOrNull()
     }
 
-    private fun escape(value: String): String {
-        return value
+    private fun escape(value: String): String =
+        value
             .replace("\\", "\\\\")
             .replace("|", "\\|")
             .replace(";", "\\;")
-    }
 
     private fun unescape(value: String): String {
         val out = StringBuilder()
@@ -129,7 +132,10 @@ object CharacterConfigStore {
         return out.toString()
     }
 
-    private fun splitEscaped(value: String, delimiter: Char): List<String> {
+    private fun splitEscaped(
+        value: String,
+        delimiter: Char,
+    ): List<String> {
         val parts = mutableListOf<String>()
         val current = StringBuilder()
         var escaped = false
@@ -150,13 +156,12 @@ object CharacterConfigStore {
         return parts
     }
 
-    private fun parseBoolean(value: String): Boolean? {
-        return when (unescape(value).trim().lowercase()) {
+    private fun parseBoolean(value: String): Boolean? =
+        when (unescape(value).trim().lowercase()) {
             "true" -> true
             "false" -> false
             else -> null
         }
-    }
 
     private fun parseWarpMap(value: String): WarpMap? {
         val raw = unescape(value).trim()
@@ -165,7 +170,12 @@ object CharacterConfigStore {
         }
         WarpMap.fromName(raw)?.let { return it }
         WarpMap.fromLabel(raw)?.let { return it }
-        val first = raw.split(';').firstOrNull()?.trim().orEmpty()
+        val first =
+            raw
+                .split(';')
+                .firstOrNull()
+                ?.trim()
+                .orEmpty()
         return WarpMap.fromLabel(first) ?: WarpMap.fromName(first)
     }
 }

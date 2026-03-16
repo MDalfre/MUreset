@@ -17,33 +17,34 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun HeaderBar(
     isRunning: Boolean,
-    onStartStop: () -> Unit
+    onStartStop: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column {
             Text(
                 text = "Character Setup",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = "Fill in attributes and add to the config list.",
                 fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
             )
         }
         StyledButton(
             text = if (isRunning) "Stop" else "Start",
             onClick = onStartStop,
             emphasis = true,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isRunning) Color(0xFFE06C75) else MaterialTheme.colorScheme.primary
-            )
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = if (isRunning) Color(0xFFE06C75) else MaterialTheme.colorScheme.primary,
+                ),
         )
     }
 }

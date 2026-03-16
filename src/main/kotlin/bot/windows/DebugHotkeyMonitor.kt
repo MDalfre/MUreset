@@ -6,14 +6,20 @@ import io.github.mdalfre.model.LogEntry
 import io.github.mdalfre.model.LogType
 
 class DebugHotkeyMonitor {
-    fun logCursor(window: WindowInfo, onLog: (LogEntry) -> Unit) {
+    fun logCursor(
+        window: WindowInfo,
+        onLog: (LogEntry) -> Unit,
+    ) {
         val point = WinDef.POINT()
         if (!User32.INSTANCE.GetCursorPos(point)) {
             return
         }
         val rect = window.rect
-        val inside = point.x >= rect.left && point.x <= rect.right &&
-            point.y >= rect.top && point.y <= rect.bottom
+        val inside =
+            point.x >= rect.left &&
+                point.x <= rect.right &&
+                point.y >= rect.top &&
+                point.y <= rect.bottom
         if (!inside) {
             onLog(LogEntry("Debug: cursor outside window.", LogType.INFO))
             return

@@ -33,66 +33,72 @@ object WebServer {
                     val active = BotRuntimeState.activeName ?: ""
                     call.respondText(
                         """{"status":"$status","active":"${escapeJson(active)}"}""",
-                        ContentType.Application.Json
+                        ContentType.Application.Json,
                     )
                 }
                 get("/api/characters") {
                     val characters = BotRuntimeState.getCharacters()
-                    val items = characters.joinToString(",") { c ->
-                        """{"name":"${escapeJson(c.name)}","active":${c.active},"warpMap":"${escapeJson(c.warpMap.label)}","soloLevel":${c.soloLevel}}"""
-                    }
+                    val items =
+                        characters.joinToString(",") { c ->
+                            """{"name":"${escapeJson(
+                                c.name,
+                            )}","active":${c.active},"warpMap":"${escapeJson(c.warpMap.label)}","soloLevel":${c.soloLevel}}"""
+                        }
                     call.respondText("[$items]", ContentType.Application.Json)
                 }
                 get("/api/stats") {
                     val stats = BotRuntimeState.getStats()
-                    val items = stats.entries.joinToString(",") { (name, s) ->
-                        """{"name":"${escapeJson(name)}","level":${s.level},"masterLevel":${s.masterLevel},"resets":${s.resets}}"""
-                    }
+                    val items =
+                        stats.entries.joinToString(",") { (name, s) ->
+                            """{"name":"${escapeJson(name)}","level":${s.level},"masterLevel":${s.masterLevel},"resets":${s.resets}}"""
+                        }
                     call.respondText("[$items]", ContentType.Application.Json)
                 }
                 get("/api/logs") {
                     val logs = BotRuntimeState.getLogs(120)
-                    val items = logs.joinToString(",") { l ->
-                        val type = when (l.type) {
-                            LogType.INFO -> "info"
-                            LogType.IMPORTANT -> "important"
-                            LogType.ATTENTION -> "attention"
+                    val items =
+                        logs.joinToString(",") { l ->
+                            val type =
+                                when (l.type) {
+                                    LogType.INFO -> "info"
+                                    LogType.IMPORTANT -> "important"
+                                    LogType.ATTENTION -> "attention"
+                                }
+                            """{"message":"${escapeJson(l.message)}","type":"$type"}"""
                         }
-                        """{"message":"${escapeJson(l.message)}","type":"$type"}"""
-                    }
                     call.respondText("[$items]", ContentType.Application.Json)
                 }
                 get("/api/screenshot/{name}") {
-                    val name = call.parameters["name"] ?: return@get call.respondText(
-                        "Missing name",
-                        status = HttpStatusCode.BadRequest
-                    )
-                    val image = BotRuntimeState.getScreenshot(name)
-                        ?: return@get call.respondText("Not found", status = HttpStatusCode.NotFound)
-                    val bytes = ByteArrayOutputStream().use { out ->
-                        ImageIO.write(image, "png", out)
-                        out.toByteArray()
-                    }
+                    val name =
+                        call.parameters["name"] ?: return@get call.respondText(
+                            "Missing name",
+                            status = HttpStatusCode.BadRequest,
+                        )
+                    val image =
+                        BotRuntimeState.getScreenshot(name)
+                            ?: return@get call.respondText("Not found", status = HttpStatusCode.NotFound)
+                    val bytes =
+                        ByteArrayOutputStream().use { out ->
+                            ImageIO.write(image, "png", out)
+                            out.toByteArray()
+                        }
                     call.respondBytes(bytes, ContentType.Image.PNG)
                 }
             }
         }.start(wait = false)
     }
 
-    private fun escapeJson(value: String): String {
-        return value
+    private fun escapeJson(value: String): String =
+        value
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
             .replace("\n", "\\n")
             .replace("\r", "\\r")
-    }
 
     private fun loadHtmlPage(): String {
         val stream = javaClass.getResourceAsStream("/web/index.html") ?: return fallbackHtml()
         return stream.bufferedReader().use { it.readText() }
     }
 
-    private fun fallbackHtml(): String {
-        return "<html><body>web/index.html not found</body></html>"
-    }
+    private fun fallbackHtml(): String = "<html><body>web/index.html not found</body></html>"
 }
